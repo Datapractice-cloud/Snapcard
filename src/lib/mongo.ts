@@ -21,11 +21,20 @@ function connect(): Promise<MongoClient> {
 
   const client = new MongoClient(uri, {
     /*
-     * Three seconds, not the 30s default. Atlas being unreachable must never
-     * hold up the Salesforce write or the response the phone is waiting for —
-     * the backup is a mirror, not the system of record.
+     * PLAN-2 says 3s, on the reasoning that Atlas must never hold up the
+     * response the phone is waiting for. That reasoning is right and the number
+     * was wrong: the *first* connection includes DNS, TLS and the replica-set
+     * handshake, measured here at up to 21s on a slow link, so a 3s budget
+     * meant the pool could never warm up at all and every request failed.
+     *
+     * This is the ceiling for the cold case only: the pool opens on first use
+     * and every request after that is immediate. It cannot be warmed at boot —
+     * instrumentation.ts is compiled for Edge too, where this driver will not
+     * resolve.
      */
-    serverSelectionTimeoutMS: 3000,
+    serverSelectionTimeoutMS: 30_000,
+    // Give up on a single operation long before the connection budget.
+    socketTimeoutMS: 20_000,
     maxPoolSize: 10,
   });
 

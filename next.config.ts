@@ -2,6 +2,13 @@ import withSerwistInit from "@serwist/next";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  /*
+   * The MongoDB driver reaches for Node built-ins like `net`, and
+   * instrumentation.ts is bundled for the Edge runtime as well as Node — so
+   * importing it there made webpack try to resolve `net` for Edge and the
+   * whole app 500'd. Left external, it is required at runtime by Node only.
+   */
+  serverExternalPackages: ["mongodb"],
   experimental: {
     // Both are single barrels re-exporting everything they contain — ~9000
     // icons, and every Radix primitive. Without this, a page that uses one
