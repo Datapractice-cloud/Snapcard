@@ -33,8 +33,33 @@ function connect(): Promise<MongoClient> {
 }
 
 export function mongoClient(): Promise<MongoClient> {
-  globalThis.__snapcardMongo ??= connect();
+  if (!globalThis.__snapcardMongo) {
+    globalThis.__snapcardMongo = connect().catch((error: unknown) => {
+      /*
+       * Never cache a failure. `??=` alone would keep a rejected promise for
+       * the life of the process, so one bad moment — Atlas asleep, a reset
+       * socket, a DNS blip at boot — would mean every request afterwards
+       * failed with the same stale error until someone restarted the server.
+       */
+      globalThis.__snapcardMongo = undefined;
+      throw error;
+    });
+  }
   return globalThis.__snapcardMongo;
+}
+
+/**
+ * Drops the cached client so the next call reconnects.
+ *
+ * Called when an operation fails at the socket level: the driver reconnects a
+ * dropped pool on its own, but a topology that has actually closed will not
+ * recover by itself.
+ */
+export async function resetMongoClient(): Promise<void> {
+  const existing = globalThis.__snapcardMongo;
+  globalThis.__snapcardMongo = undefined;
+  if (!existing) return;
+  await existing.then((client) => client.close()).catch(() => {});
 }
 
 export async function mongoDb(): Promise<Db> {
