@@ -28,8 +28,8 @@ lead_images  { clientId: 1, side: 1 } unique
 Document shape (see CLAUDE.md for `LeadSubmit`/`SalesforceResult`):
 
 ```ts
-leads: { clientId, event, capturedBy, fields, rawText,
-         consent: { given, textVersion, at },
+leads: { clientId, capturedBy, fields, rawText,
+         consent: { given, at },
          salesforce: { status, leadId?, duplicateOf?, attempts, lastError?, nextAttemptAt?, syncedAt?, claimedUntil? },
          backup: { source: "live" | "phone-retry" | "reconciled", savedAt },
          createdAt, updatedAt }
@@ -87,8 +87,8 @@ Auth: header `Authorization: Bearer ${SYNC_SECRET}`, else 401.
    Skip if the claim returns null (someone else has it).
 3. Rebuild `LeadSubmit` from the doc (images from `lead_images`), call
    `upsertLead`. On `synced`/`duplicate`: set status, leadId, syncedAt,
-   unset claimedUntil; then `attachImage` + `addToCampaign` inline (we're in
-   a cron, no need for `after()`). On `retryable`: attempts+1,
+   unset claimedUntil; then `attachImage` inline (we're in a cron, no need
+   for `after()`). On `retryable`: attempts+1,
    `nextAttemptAt = now + min(15m, 30s * 2^attempts)`, lastError. On
    `needs_review`: set status `needs_review`.
 4. Respond `{ processed, synced, failed, needsReview }`.
@@ -104,9 +104,12 @@ upserts leads that don't exist in Atlas yet; the cron only touches
 
 Auth: same `SYNC_SECRET`.
 
-1. SOQL: `SELECT Id, SnapCard_Client_Id__c, FirstName, LastName, Company, Title, Email, Phone, Website, Street, City, State, PostalCode, Country, Description, SnapCard_Consent_At__c, SnapCard_Consent_Version__c, SnapCard_Captured_By__c, SnapCard_Event__c, CreatedDate FROM Lead WHERE SnapCard_Client_Id__c != null AND CreatedDate = LAST_N_DAYS:7` (paginate with `nextRecordsUrl`).
+1. SOQL: `SELECT Id, SnapCard_Client_Id__c, FirstName, LastName, Company, Title, Email, Phone, Website, Street, City, State, PostalCode, Country, Description, CreatedDate FROM Lead WHERE SnapCard_Client_Id__c != null AND CreatedDate = LAST_N_DAYS:7` (paginate with `nextRecordsUrl`).
 2. For each record whose `SnapCard_Client_Id__c` is not in `leads`, insert
    a doc with `salesforce.status: "synced"`, `backup.source: "reconciled"`.
+   Salesforce has no capturing rep or consent record, so leave `capturedBy`
+   and `consent` unset on a backfilled doc — a reconciled lead is a Salesforce
+   record we are mirroring, not a capture we witnessed.
 3. For those, also fetch attached files:
    `SELECT ContentDocumentId FROM ContentDocumentLink WHERE LinkedEntityId = :Id`,
    then `ContentVersion.VersionData` for the latest version, and insert into

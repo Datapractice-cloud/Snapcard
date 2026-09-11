@@ -59,10 +59,6 @@ const envShape = z.object({
     .string()
     .regex(/^v\d+\.\d+$/, "SF_API_VERSION must look like v60.0")
     .default("v60.0"),
-  SF_CAMPAIGN_ID: nonEmpty("SF_CAMPAIGN_ID"),
-
-  EVENT_SLUG: nonEmpty("EVENT_SLUG"),
-  CONSENT_TEXT_VERSION: nonEmpty("CONSENT_TEXT_VERSION").default("v1"),
 
   // Phase 2. Absent in Phase 1, which is why they are optional.
   SYNC_SECRET: z.string().trim().min(1).optional(),

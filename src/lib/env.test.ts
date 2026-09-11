@@ -11,8 +11,6 @@ const complete = {
   SF_LOGIN_URL: "https://acme.my.salesforce.com/",
   SF_CLIENT_ID: "ci",
   SF_CLIENT_SECRET: "cs",
-  SF_CAMPAIGN_ID: "701xx",
-  EVENT_SLUG: "dreamforce-2026",
 };
 
 describe("parseEnv", () => {
@@ -21,7 +19,6 @@ describe("parseEnv", () => {
     expect(env.ALLOWED_EMAIL_DOMAIN).toBe("thinkvibes.com");
     expect(env.GEMINI_MODEL).toBe("gemini-2.5-flash-lite");
     expect(env.SF_API_VERSION).toBe("v60.0");
-    expect(env.CONSENT_TEXT_VERSION).toBe("v1");
     expect(env.MONGODB_DB).toBe("snapcard");
   });
 

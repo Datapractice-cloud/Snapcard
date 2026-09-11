@@ -141,7 +141,7 @@ src/
     schemas.ts                    LeadFields, ScanResponse, LeadSubmit
     gemini.ts
     salesforce/client.ts          token cache, fetch wrapper, retry on 401
-    salesforce/lead.ts            mapFields(), upsertLead(), attachImage(), addToCampaign()
+    salesforce/lead.ts            mapFields(), upsertLead(), attachImage()
     backup/types.ts               BackupStore interface
     backup/noop.ts                Phase 1
     backup/mongo.ts               Phase 2
@@ -169,9 +169,6 @@ SF_LOGIN_URL=https://<my-domain>.my.salesforce.com
 SF_CLIENT_ID=
 SF_CLIENT_SECRET=
 SF_API_VERSION=v60.0
-SF_CAMPAIGN_ID=
-EVENT_SLUG=dreamforce-2026
-CONSENT_TEXT_VERSION=v1
 SYNC_SECRET=                     # Phase 2
 MONGODB_URI=                     # Phase 2
 MONGODB_DB=snapcard              # Phase 2
@@ -179,18 +176,19 @@ MONGODB_DB=snapcard              # Phase 2
 
 ## Salesforce contract
 
-Custom fields on Lead (created by the admin, see SETUP.md):
+One custom field on Lead (created by the admin, see SETUP.md):
 
 - `SnapCard_Client_Id__c` Text(36), External ID, Unique — the phone UUID
-- `SnapCard_Consent_At__c` Date/Time
-- `SnapCard_Consent_Version__c` Text(10)
-- `SnapCard_Captured_By__c` Email — the rep's Google email
-- `SnapCard_Event__c` Text(50)
-- `LinkedIn__c` URL (may already exist; map only if present)
 
 Standard fields used: FirstName, LastName, Company, Title, Email, Phone,
 Website, Street, City, State, PostalCode, Country, Description (raw OCR text),
 LeadSource = "Event".
+
+That is the whole mapping. Nothing else is written to Salesforce — no consent
+fields, no capturing rep, no event, no LinkedIn URL, and no Campaign
+membership. The consent checkbox stays in the UI as a required gate before
+submit; it is simply not sent. Card images are still attached as a
+ContentVersion.
 
 Upsert call:
 

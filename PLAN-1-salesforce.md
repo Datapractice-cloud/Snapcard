@@ -101,10 +101,11 @@ unauthenticated request returns 401; 21st request in a minute returns 429.
 
 `src/lib/salesforce/lead.ts`:
 
-- `mapFields(submit, session) → Record<string, string>` producing the
-  Salesforce field names in CLAUDE.md, including `SnapCard_*` fields and
-  `LeadSource: "Event"`. Omit empty strings. Unit-test.
-- `upsertLead(submit, session) → SalesforceResult`:
+- `mapFields(submit) → Record<string, string>` producing the Salesforce field
+  names in CLAUDE.md: the standard fields, `Description`, `LeadSource: "Event"`
+  and `SnapCard_Client_Id__c`. Omit empty strings. Pure — no session, no env,
+  no clock. Unit-test.
+- `upsertLead(submit) → SalesforceResult`:
   PATCH by external id. 201 → `synced` with `id`. 200 → `synced`; fetch the
   Id with `GET /sobjects/Lead/SnapCard_Client_Id__c/{clientId}?fields=Id`.
   DUPLICATES_DETECTED → `duplicate` with `duplicateOf` = first match Id.
@@ -114,8 +115,6 @@ unauthenticated request returns 401; 21st request in a minute returns 429.
   `FirstPublishLocationId: leadId`). One call is enough — using
   `FirstPublishLocationId` links it to the Lead without a separate
   `ContentDocumentLink`.
-- `addToCampaign(leadId)`: POST `CampaignMember { CampaignId, LeadId, Status: "Responded" }`;
-  ignore `DUPLICATE_VALUE` errors.
 
 Done when: `npm test` passes for classifyError and mapFields; a script
 `scripts/sf-smoke.ts` (run with `tsx`) upserts a test lead twice with the
@@ -141,18 +140,18 @@ store when `MONGODB_URI` is unset. Do not implement Mongo yet.
 Flow, in this order:
 
 1. `requireSession()`, parse `LeadSubmit` (400 on failure), rate limit 60/min.
-2. `salesforce = await upsertLead(submit, session)` — this is the only
-   awaited external call before responding.
+2. `salesforce = await upsertLead(submit)` — this is the only awaited
+   external call before responding.
 3. `backup = await getBackupStore().saveLead(...)` wrapped in try/catch;
    any throw becomes `{ status: "failed" }`. Never let it change `salesforce`.
-4. If `salesforce.status` is `synced` or `duplicate`, schedule in `after()`
-   from `next/server`: `attachImage` for each image, then `addToCampaign`.
-   Errors there are logged with clientId only.
+4. If `salesforce.status` is `synced` or `duplicate`, schedule `attachImage`
+   for each image in `after()` from `next/server`. Errors there are logged
+   with clientId only.
 5. Respond 200 with `LeadsResponse`.
 
 Done when: submitting from curl creates a Lead in Salesforce with the
-external id, consent fields, an attached image, and a CampaignMember; a
-second identical submit returns the same leadId and creates nothing new.
+external id and an attached image; a second identical submit returns the same
+leadId and creates nothing new.
 
 ## Task 8 — Capture screen
 
@@ -178,9 +177,9 @@ padding at the bottom (`env(safe-area-inset-bottom)`).
 
 Review form with react-hook-form + zod (`LeadFields`), all fields editable,
 required ones marked, `rawText` in a collapsible textarea. Consent checkbox
-with the exact text from `CONSENT_TEXT` constant and version
-`CONSENT_TEXT_VERSION`. "Save lead" is disabled until consent is ticked and
-the form is valid.
+with the exact text from a `CONSENT_TEXT` constant. "Save lead" is disabled
+until consent is ticked and the form is valid. Consent is a gate only — it is
+not sent to Salesforce.
 
 On submit:
 1. Build `LeadSubmit` with `clientId = crypto.randomUUID()`, images as
@@ -234,8 +233,13 @@ both platforms and opens to `/scan`.
 
 `/admin` (admins only): a table of today's leads pulled live from
 Salesforce via SOQL
-(`SELECT Id, Name, Company, Email, SnapCard_Captured_By__c, CreatedDate FROM Lead WHERE SnapCard_Event__c = :event ORDER BY CreatedDate DESC LIMIT 200`),
-a count per rep, and a "Download CSV" button. Nothing else in Phase 1.
+(`SELECT Id, Name, Company, Email, Phone, Title, CreatedDate FROM Lead WHERE LeadSource = 'Event' AND CreatedDate = TODAY ORDER BY CreatedDate DESC LIMIT 200`),
+a total count, and a "Download CSV" button. Nothing else in Phase 1.
+
+No per-rep breakdown in Phase 1: the app no longer writes the capturing rep to
+Salesforce, and every Lead is owned by the integration user, so the org has no
+rep attribution to group by. Phase 2 can do it from Atlas, which keeps
+`capturedBy`.
 
 ## Task 13 — Hostinger deployment
 
@@ -258,4 +262,4 @@ a count per rep, and a "Download CSV" button. Nothing else in Phase 1.
   once each.
 - Double-tap "Save lead" — confirm one Lead.
 - Kill the app mid-upload; reopen; confirm the outbox recovers.
-- Confirm consent fields and card image show on the Lead in Salesforce.
+- Confirm the card image shows on the Lead in Salesforce.

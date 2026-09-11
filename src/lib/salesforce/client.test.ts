@@ -16,9 +16,9 @@ const VALIDATION_RULE = [
 
 const FIELD_SECURITY = [
   {
-    message: "Unable to create/update fields: LinkedIn__c.",
+    message: "Unable to create/update fields: SnapCard_Client_Id__c.",
     errorCode: "INVALID_FIELD_FOR_INSERT_UPDATE",
-    fields: ["LinkedIn__c"],
+    fields: ["SnapCard_Client_Id__c"],
   },
 ];
 

@@ -21,30 +21,26 @@ Do §1–3 before Phase 1 Task 5. Do §4 before Phase 2.
 Do this in a sandbox first, then production. Do **not** use a scratch org
 for the event — they expire.
 
-1. **Custom fields on Lead** (Setup → Object Manager → Lead → Fields):
+1. **Custom field on Lead** (Setup → Object Manager → Lead → Fields):
    - `SnapCard_Client_Id__c` — Text(36), ✔ External ID, ✔ Unique (case-sensitive)
-   - `SnapCard_Consent_At__c` — Date/Time
-   - `SnapCard_Consent_Version__c` — Text(10)
-   - `SnapCard_Captured_By__c` — Email
-   - `SnapCard_Event__c` — Text(50)
-   - `LinkedIn__c` — URL (skip if it already exists)
+
+   That is the only one. Everything else the app writes is a standard Lead
+   field; see the Salesforce contract in CLAUDE.md.
 2. **Integration user**: a dedicated user (API Only permission if licensed),
    profile/permission set with Create/Edit on Lead, Create on
-   ContentVersion and CampaignMember, Read on Campaign, and field-level
-   access to all fields above.
+   ContentVersion (for the card image), and field-level access to
+   `SnapCard_Client_Id__c` and to every standard field in the contract.
 3. **Connected App / External Client App** with OAuth enabled,
    ✔ "Enable Client Credentials Flow", Run As = the integration user,
    scopes `api`, `refresh_token`. Copy consumer key/secret → `SF_CLIENT_ID`,
    `SF_CLIENT_SECRET`. `SF_LOGIN_URL` = the org's My Domain URL
    (`https://xxx.my.salesforce.com`), not `login.salesforce.com`.
-4. **Campaign** "Dreamforce 2026" → copy Id → `SF_CAMPAIGN_ID`. Make sure
-   the Campaign Member Status "Responded" exists on it.
-5. **Duplicate rules**: decide with the admin. Recommended for events:
+4. **Duplicate rules**: decide with the admin. Recommended for events:
    keep existing Lead, allow the app to read the match (rule action
    "Block" with "Report" is what returns `DUPLICATES_DETECTED` with match
    records). If the rule is set to "Allow", duplicates will simply be
    created — tell the dev team which it is.
-6. Confirm any **validation rules** on Lead that could reject event data
+5. Confirm any **validation rules** on Lead that could reject event data
    (e.g. required Industry). Either relax them for `LeadSource = 'Event'`
    or make the app collect that field.
 
@@ -83,5 +79,6 @@ does not run Node apps.
   volume is negligible.
 - Every rep: install the app to their home screen and sign in **before**
   travelling. Sessions last 30 days.
-- Run the Phase 1 Task 14 and Phase 2 Task 8 field tests on the production
-  URL with a test Campaign, then delete the test Leads.
+- Run `npm run sf:smoke -- --full` against the production org, then the
+  Phase 1 Task 14 and Phase 2 Task 8 field tests on the production URL.
+  Delete the test Leads afterwards.

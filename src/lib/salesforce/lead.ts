@@ -1,4 +1,3 @@
-import { env } from "../env";
 import type { CardSide, LeadSubmit, SalesforceResult } from "../schemas";
 import {
   SalesforceUnreachable,
@@ -11,36 +10,24 @@ import {
 
 /**
  * Everything that writes a Lead. The field names here are the contract in
- * CLAUDE.md; the custom ones are created by the org admin (SETUP.md §2).
+ * CLAUDE.md. `SnapCard_Client_Id__c` is the one custom field, created by the
+ * org admin (SETUP.md §2); everything else is standard.
  */
 
-export type CaptureContext = {
-  /** The rep's Google email. */
-  capturedBy: string;
-  event: string;
-  consentVersion: string;
-  /** When the rep ticked the consent box. Stamped by the server, never the phone. */
-  consentAt: Date;
-};
-
 /**
- * Builds the Salesforce record. Pure and free of `env` so it can be tested
- * without a validated environment.
+ * Builds the Salesforce record. Pure — no `env`, no session, no clock — so the
+ * tests drive it directly.
  *
  * Empty strings are omitted rather than sent: writing "" to a field that
  * already has a value would blank it on the second upsert of the same card.
  */
-export function mapFields(submit: LeadSubmit, context: CaptureContext): Record<string, string> {
+export function mapFields(submit: LeadSubmit): Record<string, string> {
   const { fields } = submit;
 
   const record: Record<string, string> = {
     // The external id. Every write is an upsert on this, which is what makes a
     // double-tapped save one Lead instead of two.
     SnapCard_Client_Id__c: submit.clientId,
-    SnapCard_Consent_At__c: context.consentAt.toISOString(),
-    SnapCard_Consent_Version__c: context.consentVersion,
-    SnapCard_Captured_By__c: context.capturedBy,
-    SnapCard_Event__c: context.event,
     LeadSource: "Event",
   };
 
@@ -52,7 +39,6 @@ export function mapFields(submit: LeadSubmit, context: CaptureContext): Record<s
     Email: fields.email,
     Phone: fields.phone,
     Website: fields.website,
-    LinkedIn__c: fields.linkedin,
     Street: fields.street,
     City: fields.city,
     State: fields.state,
@@ -70,26 +56,11 @@ export function mapFields(submit: LeadSubmit, context: CaptureContext): Record<s
   return record;
 }
 
-function contextFor(capturedBy: string, consentAt: Date = new Date()): CaptureContext {
-  return {
-    capturedBy,
-    event: env.EVENT_SLUG,
-    consentVersion: env.CONSENT_TEXT_VERSION,
-    consentAt,
-  };
-}
-
 const EXTERNAL_ID_PATH = "/sobjects/Lead/SnapCard_Client_Id__c";
 
-/**
- * Creates or updates the Lead, keyed on the phone's clientId.
- *
- * `capturedBy` is passed in rather than read from a session because the Phase 2
- * sync cron replays leads out of Atlas, where there is no session — only the
- * email recorded at capture time.
- */
-export async function upsertLead(submit: LeadSubmit, capturedBy: string): Promise<SalesforceResult> {
-  const record = mapFields(submit, contextFor(capturedBy));
+/** Creates or updates the Lead, keyed on the phone's clientId. */
+export async function upsertLead(submit: LeadSubmit): Promise<SalesforceResult> {
+  const record = mapFields(submit);
   const path = `${EXTERNAL_ID_PATH}/${encodeURIComponent(submit.clientId)}`;
 
   let response: Response;
@@ -164,27 +135,6 @@ export async function attachImage(leadId: string, side: CardSide, dataUrl: strin
   if (!response.ok) {
     throw new Error(`ContentVersion failed: ${errorCodeOf(await readJson(response))}`);
   }
-}
-
-/** Adds the Lead to the event Campaign. Being there already is not an error. */
-export async function addToCampaign(leadId: string): Promise<void> {
-  const response = await sfFetch("/sobjects/CampaignMember", {
-    method: "POST",
-    body: JSON.stringify({
-      CampaignId: env.SF_CAMPAIGN_ID,
-      LeadId: leadId,
-      Status: "Responded",
-    }),
-  });
-
-  if (response.ok) return;
-
-  const body = await readJson(response);
-  const code = errorCodeOf(body);
-  // The rep scanned someone who is already a member of this campaign.
-  if (code === "DUPLICATE_VALUE") return;
-
-  throw new Error(`CampaignMember failed: ${code}`);
 }
 
 export function parseDataUrl(dataUrl: string): { mimeType: string; base64: string } | undefined {
