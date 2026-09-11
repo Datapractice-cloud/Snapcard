@@ -8,6 +8,7 @@ import { MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusChip } from "@/components/lead-status";
+import { LeadDetailSheet } from "@/components/lead-detail-sheet";
 import { outboxDb, processOutbox } from "@/lib/client/outbox";
 import { initialsFor } from "@/lib/initials";
 import type { HistoryItem } from "@/lib/client/outbox";
@@ -24,6 +25,7 @@ const AVATAR_TONES = [
 export function LeadsList() {
   const [query, setQuery] = useState("");
   const [syncing, setSyncing] = useState(false);
+  const [open, setOpen] = useState<string | null>(null);
 
   const leads = useLiveQuery(
     () => outboxDb().history.orderBy("createdAt").reverse().limit(200).toArray(),
@@ -83,10 +85,12 @@ export function LeadsList() {
       ) : (
         <ul className="space-y-2.5">
           {shown.map((lead, index) => (
-            <li
-              key={lead.clientId}
-              className="flex items-center gap-[13px] rounded-[14px] border border-line bg-surface px-4 py-[15px] shadow-card"
-            >
+            <li key={lead.clientId}>
+              <button
+                type="button"
+                onClick={() => setOpen(lead.clientId)}
+                className="flex w-full items-center gap-[13px] rounded-[14px] border border-line bg-surface px-4 py-[15px] text-left shadow-card hover:bg-surface-2"
+              >
               <span
                 className={`grid size-[42px] shrink-0 place-items-center rounded-xl text-sm font-extrabold ${
                   AVATAR_TONES[index % AVATAR_TONES.length]
@@ -105,11 +109,14 @@ export function LeadsList() {
                 </p>
               </div>
 
-              <StatusChip salesforce={lead.salesforce} />
+                <StatusChip salesforce={lead.salesforce} />
+              </button>
             </li>
           ))}
         </ul>
       )}
+
+      <LeadDetailSheet clientId={open} onClose={() => setOpen(null)} />
     </div>
   );
 }

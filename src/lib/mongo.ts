@@ -104,3 +104,50 @@ export async function listTodaysLeadsFromAtlas(limit = 200) {
     createdAt: doc.createdAt.toISOString(),
   }));
 }
+
+export type LeadDetail = {
+  clientId: string;
+  capturedBy: string;
+  fields: Record<string, string>;
+  rawText: string;
+  consentAt: string | null;
+  salesforce: LeadDoc["salesforce"];
+  createdAt: string;
+  sides: ("front" | "back")[];
+};
+
+/** The whole lead, plus which card sides have an image stored. */
+export async function findLeadDetail(clientId: string): Promise<LeadDetail | null> {
+  const leads = await leadsCollection();
+  const doc = await leads.findOne({ clientId });
+  if (!doc) return null;
+
+  const images = await leadImagesCollection();
+  const stored = await images.find({ clientId }, { projection: { side: 1 } }).toArray();
+
+  return {
+    clientId: doc.clientId,
+    capturedBy: doc.capturedBy,
+    fields: doc.fields,
+    rawText: doc.rawText,
+    consentAt: doc.consent?.at ? doc.consent.at.toISOString() : null,
+    salesforce: doc.salesforce,
+    createdAt: doc.createdAt.toISOString(),
+    sides: stored.map((image) => image.side),
+  };
+}
+
+/** The stored bytes for one side. Null when there is no such image. */
+export async function findLeadImage(clientId: string, side: "front" | "back") {
+  const images = await leadImagesCollection();
+  const image = await images.findOne({ clientId, side });
+  if (!image) return null;
+  return { mimeType: image.mimeType, bytes: Buffer.from(image.data.buffer) };
+}
+
+/** Who captured a lead, for the access check. Cheap: one indexed field. */
+export async function findLeadOwner(clientId: string): Promise<string | null> {
+  const leads = await leadsCollection();
+  const doc = await leads.findOne({ clientId }, { projection: { capturedBy: 1 } });
+  return doc?.capturedBy ?? null;
+}

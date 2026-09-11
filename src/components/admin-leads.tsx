@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { Users } from "@phosphor-icons/react/dist/csr/Users";
 import { Button } from "@/components/ui/button";
+import { LeadDetailSheet } from "@/components/lead-detail-sheet";
 import { toCsv, type CsvColumn } from "@/lib/csv";
 import type { EventLead } from "@/lib/salesforce/lead";
 
@@ -22,6 +25,8 @@ const CSV_COLUMNS: CsvColumn<EventLead>[] = [
 ];
 
 export function AdminLeads({ leads, capped }: Props) {
+  const [open, setOpen] = useState<string | null>(null);
+
   function download() {
     const csv = toCsv(CSV_COLUMNS, leads);
     // A BOM, or Excel reads an accented name as mojibake.
@@ -69,7 +74,7 @@ export function AdminLeads({ leads, capped }: Props) {
           <table className="w-full min-w-[640px] border-collapse text-[13.5px]">
             <thead>
               <tr>
-                {["Name", "Email", "Phone", "Created"].map((header) => (
+                {["Name", "Email", "Phone", "Created", ""].map((header) => (
                   <th
                     key={header}
                     className="border-b border-line bg-surface-2 px-4 py-3 text-left text-[11px] font-extrabold tracking-[0.06em] text-subtle uppercase"
@@ -81,7 +86,11 @@ export function AdminLeads({ leads, capped }: Props) {
             </thead>
             <tbody>
               {leads.map((lead) => (
-                <tr key={lead.id} className="border-b border-line last:border-b-0">
+                <tr
+                  key={lead.id}
+                  onClick={() => setOpen(lead.id)}
+                  className="cursor-pointer border-b border-line last:border-b-0 hover:bg-surface-2"
+                >
                   <td className="px-4 py-[13px] align-middle">
                     <p className="font-extrabold">{lead.name || "No name"}</p>
                     <p className="text-xs text-muted-foreground">
@@ -102,12 +111,17 @@ export function AdminLeads({ leads, capped }: Props) {
                       {formatTime(lead.createdAt)}
                     </time>
                   </td>
+                  <td className="px-4 py-[13px] text-right align-middle">
+                    <CaretRight size={15} weight="bold" className="inline text-subtle" />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <LeadDetailSheet clientId={open} onClose={() => setOpen(null)} />
     </div>
   );
 }
