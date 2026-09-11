@@ -33,9 +33,14 @@ function connect(): Promise<MongoClient> {
      * resolve.
      */
     serverSelectionTimeoutMS: 30_000,
-    // Give up on a single operation long before the connection budget.
-    socketTimeoutMS: 20_000,
+    /*
+     * No socketTimeoutMS. A 20s limit was killing healthy operations on a link
+     * where the handshake alone takes 21s; server selection already bounds how
+     * long anything waits, and `withMongo` below recovers a reset socket.
+     */
     maxPoolSize: 10,
+    retryReads: true,
+    retryWrites: true,
   });
 
   return client.connect();
@@ -69,6 +74,57 @@ export async function resetMongoClient(): Promise<void> {
   globalThis.__snapcardMongo = undefined;
   if (!existing) return;
   await existing.then((client) => client.close()).catch(() => {});
+}
+
+/**
+ * True for failures that mean "this connection is gone", as opposed to
+ * "the database said no".
+ *
+ * A reset socket, a closed topology or a selection timeout are all recoverable
+ * by throwing the pool away and opening a new one. A duplicate key is not, and
+ * retrying it would just fail twice.
+ */
+function isConnectionError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+
+  const name = error.name;
+  if (
+    name === "MongoNetworkError" ||
+    name === "MongoNotConnectedError" ||
+    name === "MongoTopologyClosedError" ||
+    name === "MongoServerSelectionError"
+  ) {
+    return true;
+  }
+
+  const code = (error as { code?: unknown }).code;
+  const causeCode = (error.cause as { code?: unknown } | undefined)?.code;
+  const socketCodes = ["ECONNRESET", "EPIPE", "ETIMEDOUT", "ENOTFOUND", "ECONNREFUSED"];
+  return socketCodes.includes(String(code)) || socketCodes.includes(String(causeCode));
+}
+
+/**
+ * Runs a database operation, and on a connection-level failure throws the pool
+ * away and tries once more.
+ *
+ * Without this, a single reset socket poisoned the process: the broken client
+ * stayed cached, so every later request failed with the same ECONNRESET until
+ * somebody restarted the server. That is exactly what the admin page was
+ * showing.
+ *
+ * One retry, not a loop — if a fresh connection fails too, the database really
+ * is unreachable and the caller should hear about it rather than hang.
+ */
+export async function withMongo<T>(operation: (db: Db) => Promise<T>): Promise<T> {
+  try {
+    return await operation(await mongoDb());
+  } catch (error) {
+    if (!isConnectionError(error)) throw error;
+
+    console.warn("mongo_reconnecting", { reason: (error as Error).name || "socket" });
+    await resetMongoClient();
+    return operation(await mongoDb());
+  }
 }
 
 export async function mongoDb(): Promise<Db> {
@@ -118,15 +174,17 @@ export async function leadImagesCollection() {
 
 /** One row of the admin table, read from Atlas rather than Salesforce. */
 export async function listTodaysLeadsFromAtlas(limit = 200) {
-  const leads = await leadsCollection();
   const since = new Date();
   since.setHours(0, 0, 0, 0);
 
-  const docs = await leads
-    .find({ createdAt: { $gte: since } })
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .toArray();
+  const docs = await withMongo((db) =>
+    db
+      .collection<LeadDoc>("leads")
+      .find({ createdAt: { $gte: since } })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .toArray(),
+  );
 
   return docs.map((doc) => ({
     id: doc.clientId,
@@ -154,12 +212,12 @@ export type LeadDetail = {
 
 /** The whole lead, plus which card sides have an image stored. */
 export async function findLeadDetail(clientId: string): Promise<LeadDetail | null> {
-  const leads = await leadsCollection();
-  const doc = await leads.findOne({ clientId });
+  const doc = await withMongo((db) => db.collection<LeadDoc>("leads").findOne({ clientId }));
   if (!doc) return null;
 
-  const images = await leadImagesCollection();
-  const stored = await images.find({ clientId }, { projection: { side: 1 } }).toArray();
+  const stored = await withMongo((db) =>
+    db.collection<LeadImageDoc>("lead_images").find({ clientId }, { projection: { side: 1 } }).toArray(),
+  );
 
   return {
     clientId: doc.clientId,
@@ -175,15 +233,17 @@ export async function findLeadDetail(clientId: string): Promise<LeadDetail | nul
 
 /** The stored bytes for one side. Null when there is no such image. */
 export async function findLeadImage(clientId: string, side: "front" | "back") {
-  const images = await leadImagesCollection();
-  const image = await images.findOne({ clientId, side });
+  const image = await withMongo((db) =>
+    db.collection<LeadImageDoc>("lead_images").findOne({ clientId, side }),
+  );
   if (!image) return null;
   return { mimeType: image.mimeType, bytes: Buffer.from(image.data.buffer) };
 }
 
 /** Who captured a lead, for the access check. Cheap: one indexed field. */
 export async function findLeadOwner(clientId: string): Promise<string | null> {
-  const leads = await leadsCollection();
-  const doc = await leads.findOne({ clientId }, { projection: { capturedBy: 1 } });
+  const doc = await withMongo((db) =>
+    db.collection<LeadDoc>("leads").findOne({ clientId }, { projection: { capturedBy: 1 } }),
+  );
   return doc?.capturedBy ?? null;
 }

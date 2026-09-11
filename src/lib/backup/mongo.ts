@@ -1,5 +1,5 @@
 import { Binary, type AnyBulkWriteOperation } from "mongodb";
-import { leadImagesCollection, leadsCollection, type LeadImageDoc } from "../mongo";
+import { withMongo, type LeadDoc, type LeadImageDoc } from "../mongo";
 import { parseDataUrl } from "../salesforce/lead";
 import type { BackupResult, LeadSubmit } from "../schemas";
 import type { BackupStore } from "./types";
@@ -21,7 +21,6 @@ const MAX_IMAGE_BYTES = 1024 * 1024;
 
 export const mongoBackupStore: BackupStore = {
   async saveLead({ submit, capturedBy, salesforce }): Promise<BackupResult> {
-    const leads = await leadsCollection();
     const now = new Date();
 
     /*
@@ -34,32 +33,35 @@ export const mongoBackupStore: BackupStore = {
         ? { attempts: 1, nextAttemptAt: new Date(now.getTime() + FIRST_RETRY_MS) }
         : { attempts: 0 };
 
-    await leads.updateOne(
-      { clientId: submit.clientId },
-      {
-        // createdAt is the first time we saw the lead; a retry must not move it.
-        $setOnInsert: { clientId: submit.clientId, createdAt: now },
-        $set: {
-          capturedBy,
-          fields: submit.fields,
-          rawText: submit.rawText,
-          // Stamped by the server, as at capture. The phone never supplies it.
-          consent: { given: true as const, at: now },
-          salesforce: {
-            status: salesforce.status,
-            ...(salesforce.leadId ? { leadId: salesforce.leadId } : {}),
-            ...(salesforce.duplicateOf ? { duplicateOf: salesforce.duplicateOf } : {}),
-            ...(salesforce.error ? { lastError: salesforce.error.slice(0, 500) } : {}),
-            ...(salesforce.status === "synced" || salesforce.status === "duplicate"
-              ? { syncedAt: now }
-              : {}),
-            ...retry,
+    // withMongo so a reset socket reconnects instead of losing the lead.
+    await withMongo((db) =>
+      db.collection<LeadDoc>("leads").updateOne(
+        { clientId: submit.clientId },
+        {
+          // createdAt is the first time we saw the lead; a retry must not move it.
+          $setOnInsert: { clientId: submit.clientId, createdAt: now },
+          $set: {
+            capturedBy,
+            fields: submit.fields,
+            rawText: submit.rawText,
+            // Stamped by the server, as at capture. The phone never supplies it.
+            consent: { given: true as const, at: now },
+            salesforce: {
+              status: salesforce.status,
+              ...(salesforce.leadId ? { leadId: salesforce.leadId } : {}),
+              ...(salesforce.duplicateOf ? { duplicateOf: salesforce.duplicateOf } : {}),
+              ...(salesforce.error ? { lastError: salesforce.error.slice(0, 500) } : {}),
+              ...(salesforce.status === "synced" || salesforce.status === "duplicate"
+                ? { syncedAt: now }
+                : {}),
+              ...retry,
+            },
+            backup: { source: "live" as const, savedAt: now },
+            updatedAt: now,
           },
-          backup: { source: "live" as const, savedAt: now },
-          updatedAt: now,
         },
-      },
-      { upsert: true },
+        { upsert: true },
+      ),
     );
 
     return { status: "saved" };
@@ -89,7 +91,6 @@ export const mongoBackupStore: BackupStore = {
 
     if (decoded.length === 0) return;
 
-    const images_ = await leadImagesCollection();
     const operations: AnyBulkWriteOperation<LeadImageDoc>[] = decoded.map((doc) => ({
       updateOne: {
         filter: { clientId: doc.clientId, side: doc.side },
@@ -99,6 +100,8 @@ export const mongoBackupStore: BackupStore = {
     }));
 
     // Unordered: one oversized or rejected side must not stop the other.
-    await images_.bulkWrite(operations, { ordered: false });
+    await withMongo((db) =>
+      db.collection<LeadImageDoc>("lead_images").bulkWrite(operations, { ordered: false }),
+    );
   },
 };
