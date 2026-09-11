@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { StatusChip } from "@/components/lead-status";
+import { ImageLightbox } from "@/components/image-lightbox";
 import type { SalesforceResult } from "@/lib/schemas";
 
 type LeadDetail = {
@@ -55,6 +56,7 @@ export function LeadDetailSheet({ clientId, fallback, onClose }: Props) {
   const [lead, setLead] = useState<LeadDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [localOnly, setLocalOnly] = useState(false);
+  const [zoomed, setZoomed] = useState<string | null>(null);
 
   /*
    * Read through a ref rather than a dependency: the caller builds this object
@@ -139,15 +141,23 @@ export function LeadDetailSheet({ clientId, fallback, onClose }: Props) {
                   <div className="grid gap-2.5 sm:grid-cols-2">
                     {shown.sides.map((side) => (
                       <figure key={side}>
-                        {/* Served by /api/images, private and never cached. */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={`/api/images/${shown.clientId}/${side}`}
-                          alt={`${side} of ${name}'s card`}
-                          className="w-full rounded-[10px] border border-line bg-surface-2"
-                        />
-                        <figcaption className="mt-1 text-[11.5px] font-bold text-subtle capitalize">
-                          {side}
+                        <button
+                          type="button"
+                          onClick={() => setZoomed(`/api/images/${shown.clientId}/${side}`)}
+                          aria-label={`Enlarge the ${side} of the card`}
+                          className="press block w-full overflow-hidden rounded-[10px] border border-line bg-surface-2 hover:border-line-strong"
+                        >
+                          {/* Served by /api/images, private and never cached. */}
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`/api/images/${shown.clientId}/${side}`}
+                            alt={`${side} of ${name}'s card`}
+                            className="w-full"
+                          />
+                        </button>
+                        <figcaption className="mt-1 flex items-center gap-1 text-[11.5px] font-bold text-subtle">
+                          <span className="capitalize">{side}</span>
+                          <span aria-hidden>· tap to enlarge</span>
                         </figcaption>
                       </figure>
                     ))}
@@ -194,6 +204,8 @@ export function LeadDetailSheet({ clientId, fallback, onClose }: Props) {
           )}
         </div>
       </SheetContent>
+
+      <ImageLightbox src={zoomed} alt={`Card for ${name}`} onClose={() => setZoomed(null)} />
     </Sheet>
   );
 }

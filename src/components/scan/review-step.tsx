@@ -52,7 +52,7 @@ export function ReviewStep({
   return (
     <form
       onSubmit={handleSubmit((fields) => onSubmit(fields, text))}
-      className="rounded-[14px] border border-line bg-surface p-[22px] shadow-card"
+      className="fade-up rounded-[14px] border border-line bg-surface p-[22px] shadow-card"
       noValidate
     >
       <div className="mb-[18px] flex items-center justify-between gap-3">

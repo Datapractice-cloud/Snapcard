@@ -143,3 +143,49 @@
     @apply font-extrabold tracking-tight;
   }
 }
+
+@layer components {
+  /*
+   * Cobalt's press feedback. Every control a thumb can hit uses this, so the
+   * app answers a tap the same way everywhere — which is most of what makes an
+   * interface feel finished rather than assembled.
+   */
+  .press {
+    transition:
+      transform 0.12s,
+      background-color 0.15s,
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+  .press:active {
+    transform: translateY(1px) scale(0.985);
+  }
+
+  /* Cobalt's `.view.active`: content lifts in rather than appearing. */
+  .fade-up {
+    animation: fade-up 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Someone who asked not to be moved is not moved. */
+  @media (prefers-reduced-motion: reduce) {
+    .press,
+    .fade-up {
+      animation: none;
+      transition: none;
+    }
+    .press:active {
+      transform: none;
+    }
+  }
+}

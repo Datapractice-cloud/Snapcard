@@ -102,6 +102,8 @@ export async function listTodaysLeadsFromAtlas(limit = 200) {
     email: doc.fields.email ?? "",
     phone: doc.fields.phone ?? "",
     createdAt: doc.createdAt.toISOString(),
+    status: doc.salesforce?.status ?? "skipped",
+    capturedBy: doc.capturedBy ?? "",
   }));
 }
 

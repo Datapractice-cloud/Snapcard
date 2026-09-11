@@ -7,7 +7,7 @@ import { env } from "@/lib/env";
 import { listTodaysLeadsFromAtlas } from "@/lib/mongo";
 import { listTodaysEventLeads, type EventLeadsResult } from "@/lib/salesforce/lead";
 
-/** Read live from Salesforce on every visit; never cached. */
+/** Read live on every visit; never cached. */
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
@@ -21,13 +21,15 @@ export default async function AdminPage() {
    * the ones Salesforce refused or never saw, which is exactly the set an admin
    * needs. Salesforce is the fallback for a deployment with no backup store.
    */
+  const source = env.MONGODB_URI ? "the database" : "Salesforce";
+
   const result: EventLeadsResult = env.MONGODB_URI
     ? await listFromAtlas()
     : await listTodaysEventLeads();
 
   return (
     <>
-      <PageHeader title="Admin" subtitle="Today's event leads, live from Salesforce." />
+      <PageHeader title="Admin" subtitle={`Every lead captured today, live from ${source}.`} />
 
       {result.ok ? (
         <AdminLeads leads={result.leads} capped={result.capped} />

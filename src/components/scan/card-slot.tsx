@@ -61,7 +61,7 @@ export function CardSlot({ label, hint, required, shot, busy, onPick, onClear }:
   }
 
   return (
-    <div className="rounded-[14px] border border-line bg-surface p-4 shadow-card">
+    <div className="fade-up rounded-[14px] border border-line bg-surface p-4 shadow-card">
       <div className="mb-3 flex items-baseline justify-between">
         <h2 className="text-[15px] font-extrabold">
           {label} {required && <span className="text-bad">*</span>}
@@ -103,7 +103,7 @@ export function CardSlot({ label, hint, required, shot, busy, onPick, onClear }:
       ) : (
         <div
           className={cn(
-            "rounded-[10px] border-[1.5px] border-dashed border-line-strong px-5 py-8 text-center",
+            "rounded-[10px] border-[1.5px] border-dashed border-line-strong px-5 py-8 text-center transition-colors",
             busy && "opacity-60",
           )}
         >

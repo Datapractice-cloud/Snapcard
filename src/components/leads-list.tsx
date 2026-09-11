@@ -100,7 +100,7 @@ export function LeadsList() {
                     },
                   })
                 }
-                className="flex w-full items-center gap-[13px] rounded-[14px] border border-line bg-surface px-4 py-[15px] text-left shadow-card hover:bg-surface-2"
+                className="press flex w-full items-center gap-[13px] rounded-[14px] border border-line bg-surface px-4 py-[15px] text-left shadow-card hover:bg-surface-2"
               >
               <span
                 className={`grid size-[42px] shrink-0 place-items-center rounded-xl text-sm font-extrabold ${

@@ -30,7 +30,7 @@ export function SavedStep({ clientId, name, onScanNext }: Props) {
   const Icon = outcome.tone === "ok" ? CheckCircle : outcome.tone === "bad" ? Warning : DeviceMobile;
 
   return (
-    <div className="rounded-[14px] border border-line bg-surface p-6 text-center shadow-card">
+    <div className="fade-up rounded-[14px] border border-line bg-surface p-6 text-center shadow-card">
       <div
         className={cn(
           "mx-auto grid size-14 place-items-center rounded-full",

@@ -32,7 +32,7 @@ export function CaptureStep({
   const ready = Boolean(shots.front) && compressing === null;
 
   return (
-    <div className="grid gap-[18px] desk:grid-cols-2 desk:items-start">
+    <div className="fade-up grid gap-[18px] desk:grid-cols-2 desk:items-start">
       <div className="space-y-[14px]">
         <CardSlot
           label="Front"

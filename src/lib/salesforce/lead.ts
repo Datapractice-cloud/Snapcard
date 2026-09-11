@@ -183,6 +183,9 @@ export type EventLead = {
   email: string;
   phone: string;
   createdAt: string;
+  /** Only known when the rows came from the backup store. */
+  status?: SalesforceResult["status"];
+  capturedBy?: string;
 };
 
 export type EventLeadsResult =
