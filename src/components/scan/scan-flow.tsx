@@ -2,13 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { compressImage, toDataUrl } from "@/lib/client/compress";
-import {
-  EMPTY_LEAD_FIELDS,
-  type CardSide,
-  type LeadFields,
-  type LeadsResponse,
-  type SalesforceResult,
-} from "@/lib/schemas";
+import { addToOutbox, processOutbox } from "@/lib/client/outbox";
+import { EMPTY_LEAD_FIELDS, leadSubmitSchema, type CardSide, type LeadFields } from "@/lib/schemas";
 import { CaptureStep } from "./capture-step";
 import { ReviewStep } from "./review-step";
 import { SavedStep } from "./saved-step";
@@ -17,7 +12,7 @@ import type { ScanResult, Shot } from "./types";
 
 type Step = "capture" | "review" | "saved";
 
-type Saved = { name: string; salesforce: SalesforceResult };
+type Saved = { clientId: string; name: string };
 
 /**
  * Capture → Review → Saved, all on /scan.
@@ -44,9 +39,6 @@ export function ScanFlow() {
    * Save, or a reply lost to a dead signal, harmless. Cleared by "Scan next".
    */
   const clientId = useRef<string | null>(null);
-
-  /** What was sent, so Retry re-sends exactly that rather than a rebuilt guess. */
-  const lastSubmitted = useRef<{ fields: LeadFields; rawText: string } | null>(null);
 
   // Object URLs are not garbage collected. Revoking on unmount keeps a long
   // booth session from leaking a blob per card.
@@ -129,7 +121,6 @@ export function ScanFlow() {
     async (fields: LeadFields, rawText: string) => {
       setSaving(true);
       setError(null);
-      lastSubmitted.current = { fields, rawText };
 
       try {
         clientId.current ??= crypto.randomUUID();
@@ -141,36 +132,34 @@ export function ScanFlow() {
             .map(async (shot) => ({ side: shot.side, dataUrl: await toDataUrl(shot.blob) })),
         );
 
-        /*
-         * Task 10 puts the outbox in front of this call and shows the Saved
-         * step immediately. Until it exists, the request is awaited: telling a
-         * rep a lead is saved before anything durable holds it would be a lie.
-         */
-        const response = await fetch("/api/leads", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            clientId: clientId.current,
-            fields,
-            rawText,
-            consent: { given: true },
-            images,
-          }),
+        // Parsed here too, so a payload the server would reject is caught while
+        // the rep is still looking at the form rather than in a queue overnight.
+        const payload = leadSubmitSchema.parse({
+          clientId: clientId.current,
+          fields,
+          rawText,
+          consent: { given: true },
+          images,
         });
 
-        if (!response.ok) {
-          setError(saveMessageFor(response.status));
-          return;
-        }
+        /*
+         * Durable before the network, as CLAUDE.md requires. Once this resolves
+         * the lead survives a closed app, a dead battery and a lost signal, so
+         * the rep can be handed straight back to the camera.
+         */
+        await addToOutbox(payload);
 
-        const result = (await response.json()) as LeadsResponse;
         setSaved({
+          clientId: payload.clientId,
           name: [fields.firstName, fields.lastName].filter(Boolean).join(" ") || "This lead",
-          salesforce: result.salesforce,
         });
         setStep("saved");
+
+        // Not awaited: the Saved step subscribes to the result and updates the
+        // badge in place whenever it lands.
+        void processOutbox();
       } catch {
-        setError("No connection. The lead was not saved — try again when you have signal.");
+        setError("The lead could not be stored on this phone. Try saving again.");
       } finally {
         setSaving(false);
       }
@@ -224,13 +213,7 @@ export function ScanFlow() {
       )}
 
       {step === "saved" && saved && (
-        <SavedStep
-          name={saved.name}
-          salesforce={saved.salesforce}
-          saving={saving}
-          onScanNext={scanNext}
-          onRetry={() => void submit(lastSubmitted.current!.fields, lastSubmitted.current!.rawText)}
-        />
+        <SavedStep clientId={saved.clientId} name={saved.name} onScanNext={scanNext} />
       )}
 
       {scanning && <ScanningOverlay />}
@@ -243,12 +226,4 @@ function scanMessageFor(status: number): string {
   if (status === 429) return "Too many scans in a row. Wait a moment and try again.";
   if (status === 413 || status === 400) return "That photo was not usable. Try taking it again.";
   return "We could not read that card. Try again, or fill it in manually.";
-}
-
-function saveMessageFor(status: number): string {
-  if (status === 401) return "Your session expired. Reload the page and sign in again.";
-  if (status === 429) return "Too many leads saved in a row. Wait a moment and try again.";
-  if (status === 413) return "The photos were too large to send. Retake them and try again.";
-  if (status === 400) return "Something in the form was rejected. Check the fields and try again.";
-  return "The lead could not be saved. Try again in a moment.";
 }

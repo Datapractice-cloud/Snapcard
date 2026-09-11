@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppBar } from "@/components/app-bar";
 import { SideNav, TabBar } from "@/components/nav";
+import { OutboxRunner } from "@/components/outbox-runner";
 import { auth } from "@/lib/auth";
 
 /**
@@ -30,6 +31,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </div>
 
       <TabBar isAdmin={isAdmin} />
+
+      {/* Renders nothing; keeps the queue draining wherever the rep is. */}
+      <OutboxRunner />
     </>
   );
 }
