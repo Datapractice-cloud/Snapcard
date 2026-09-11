@@ -15,6 +15,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@google/genai": "^2.22.0",
     "@hookform/resolvers": "^5.9.1",
     "@phosphor-icons/react": "^2.1.10",
     "class-variance-authority": "^0.7.1",
