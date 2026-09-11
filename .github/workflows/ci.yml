@@ -1,0 +1,54 @@
+name: CI
+
+# Pull requests into either long-lived branch, and pushes to them — work lands
+# on main directly as often as through a PR, and production is what Hostinger
+# deploys, so neither should be able to go red unnoticed.
+on:
+  pull_request:
+    branches: [main, production]
+  push:
+    branches: [main, production]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Hostinger runs Node 20 while we develop on 24. Pinning CI to the
+          # deployment's version is the only thing that catches a Node 24-only
+          # API before it reaches the event.
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      - run: npm run lint
+
+      - run: npm test
+
+      # A build is the step that actually breaks a deploy, and src/lib/env.ts is
+      # evaluated during it — so the environment has to be present, and every
+      # value below is deliberately fake. Nothing here reaches a real service:
+      # `next build` renders pages, it does not call Salesforce or Gemini.
+      - name: Build
+        run: npm run build
+        env:
+          AUTH_SECRET: ci-not-a-real-secret
+          AUTH_GOOGLE_ID: ci.apps.googleusercontent.com
+          AUTH_GOOGLE_SECRET: ci-not-a-real-secret
+          AUTH_TRUST_HOST: "true"
+          ALLOWED_EMAIL_DOMAIN: thinkvibes.com
+          ADMIN_EMAILS: ci@thinkvibes.com
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          GEMINI_API_KEY: ci-not-a-real-key
+          GEMINI_MODEL: gemini-3.5-flash-lite
+          SF_LOGIN_URL: https://ci.my.salesforce.com
+          SF_CLIENT_ID: ci-not-a-real-id
+          SF_CLIENT_SECRET: ci-not-a-real-secret
+          SF_API_VERSION: v60.0
