@@ -35,6 +35,15 @@ describe("parseEnv", () => {
     expect(env.GEMINI_MODEL).toBe("gemini-2.5-flash-lite");
   });
 
+  it("defaults AUTH_TRUST_HOST on, because the app runs behind a proxy", () => {
+    expect(parseEnv(complete).AUTH_TRUST_HOST).toBe(true);
+    expect(parseEnv({ ...complete, AUTH_TRUST_HOST: "false" }).AUTH_TRUST_HOST).toBe(false);
+  });
+
+  it("rejects an AUTH_TRUST_HOST that is not true or false", () => {
+    expect(() => parseEnv({ ...complete, AUTH_TRUST_HOST: "yes" })).toThrow(/AUTH_TRUST_HOST/);
+  });
+
   it("splits and lowercases ADMIN_EMAILS", () => {
     expect(parseEnv(complete).ADMIN_EMAILS).toEqual(["a@thinkvibes.com", "b@thinkvibes.com"]);
   });

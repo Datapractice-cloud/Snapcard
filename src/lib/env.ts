@@ -32,6 +32,18 @@ const envShape = z.object({
   AUTH_GOOGLE_ID: nonEmpty("AUTH_GOOGLE_ID"),
   AUTH_GOOGLE_SECRET: nonEmpty("AUTH_GOOGLE_SECRET"),
 
+  /*
+   * Hostinger terminates TLS in front of the Node process, so Auth.js has to
+   * be told to trust the forwarded host. Without it every sign-in fails with
+   * UntrustedHost, because Auth.js will not guess a callback URL from headers
+   * it does not trust. Only set "false" if the app is ever served with no
+   * proxy in front of it.
+   */
+  AUTH_TRUST_HOST: z
+    .enum(["true", "false"], { error: 'AUTH_TRUST_HOST must be "true" or "false"' })
+    .default("true")
+    .transform((value) => value === "true"),
+
   ALLOWED_EMAIL_DOMAIN: nonEmpty("ALLOWED_EMAIL_DOMAIN").default("thinkvibes.com"),
   /** Comma-separated in the environment, a lowercased list here. */
   ADMIN_EMAILS: z

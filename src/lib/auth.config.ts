@@ -10,9 +10,16 @@ import type { NextAuthConfig } from "next-auth";
  * which only ever runs on the server.
  */
 export const authConfig = {
-  // Hostinger terminates TLS in front of the Node process, so Auth.js has to
-  // be told to trust the forwarded host rather than guess the callback URL.
-  trustHost: true,
+  /*
+   * Hostinger terminates TLS in front of the Node process, so Auth.js has to
+   * be told to trust the forwarded host rather than guess the callback URL.
+   *
+   * Read straight off process.env rather than through env.ts: this module also
+   * runs on the Edge runtime in middleware, where process.env is not
+   * enumerable. A static member access is the form that works on both, and
+   * env.ts still validates the value at server startup.
+   */
+  trustHost: process.env.AUTH_TRUST_HOST !== "false",
   providers: [],
   pages: {
     signIn: "/login",
