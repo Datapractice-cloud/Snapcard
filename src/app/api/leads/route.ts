@@ -63,12 +63,29 @@ export async function POST(request: Request) {
   }
 
   const submit = parsed.data;
+  const store = getBackupStore();
 
-  // The only awaited external call before responding. Everything else either
-  // cannot change the answer or happens after it.
-  const salesforce = await upsertLead(submit);
+  /*
+   * The images do not depend on what Salesforce says, so they upload
+   * alongside the Lead write rather than after it — two round trips in the
+   * time of one, on a connection the rep is waiting on.
+   *
+   * Isolated with .then(_, _) rather than try/catch so a backup failure can
+   * never reject the Promise.all and take the Salesforce result down with it.
+   */
+  const [salesforce] = await Promise.all([
+    upsertLead(submit),
+    store.saveImages(submit.clientId, submit.images).then(
+      () => "ok" as const,
+      () => {
+        console.error("backup_images_failed", { clientId: submit.clientId });
+        return "failed" as const;
+      },
+    ),
+  ]);
 
-  const backup = await saveLeadSafely(getBackupStore(), { submit, capturedBy, salesforce });
+  // After the upsert, because it records what the upsert did.
+  const backup = await saveLeadSafely(store, { submit, capturedBy, salesforce });
 
   /*
    * On a blocked duplicate there is no new Lead, but the person exists — so the
