@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d10">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>SnapCard - Nightshift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+:root{
+  --bg:#0b0d10; --surface:#121519; --surface-2:#1a1e24; --surface-3:#22272e;
+  --line:#242a32; --line-strong:#323a44;
+  --text:#eef1f4; --text-2:#9aa4b0; --text-3:#5f6873;
+  --accent:#34d399; --accent-dim:#10b981; --accent-ink:#052e22; --accent-soft:rgba(52,211,153,.1);
+  --warn:#fbbf24; --warn-soft:rgba(251,191,36,.12);
+  --bad:#f87171; --bad-soft:rgba(248,113,113,.12);
+  --radius:12px; --radius-sm:9px;
+  --nav-h:62px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark;-webkit-text-size-adjust:100%}
+body{
+  font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  min-height:100dvh;font-size:15px;line-height:1.55;
+  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));
+}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
+::placeholder{color:var(--text-3)}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:30;background:rgba(11,13,16,.86);backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);
+  padding:calc(11px + env(safe-area-inset-top)) 18px 11px;display:flex;align-items:center;gap:12px;
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:-.01em}
+.brand-mark{width:29px;height:29px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:16px}
+.topbar .spacer{flex:1}
+.sync-pill{
+  display:flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
+  color:var(--accent);background:var(--accent-soft);border:1px solid rgba(52,211,153,.25);border-radius:999px;padding:6px 12px;
+}
+.sync-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.role-btn{
+  width:34px;height:34px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);
+  display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--text-2);
+}
+
+/* ---------- Layout / rail ---------- */
+.rail{display:none}
+.shell{max-width:1100px;margin:0 auto;padding:22px 18px 40px}
+@media(min-width:900px){
+  body{padding-bottom:0}
+  .tabbar{display:none}
+  .layout{display:grid;grid-template-columns:76px 1fr}
+  .rail{
+    display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px 0;
+    border-right:1px solid var(--line);position:sticky;top:58px;height:calc(100dvh - 58px);
+  }
+  .rail button{
+    width:48px;height:48px;border-radius:13px;display:grid;place-items:center;font-size:21px;color:var(--text-3);
+    transition:all .18s;position:relative;
+  }
+  .rail button:hover{color:var(--text);background:var(--surface-2)}
+  .rail button.on{color:var(--accent);background:var(--accent-soft)}
+  .rail button.on::before{content:'';position:absolute;left:-14px;width:3px;height:22px;border-radius:3px;background:var(--accent)}
+  .rail .gap{flex:1}
+  .shell{padding:34px 44px 60px}
+}
+
+/* ---------- Views ---------- */
+.view{display:none}
+.view.active{display:block;animation:fadeUp .26s cubic-bezier(.16,1,.3,1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.view.active{animation:none}}
+h1.page-title{font-size:23px;font-weight:700;letter-spacing:-.02em}
+p.page-sub{color:var(--text-2);font-size:13.5px;margin:5px 0 24px;max-width:54ch}
+
+/* ---------- Tab bar mobile ---------- */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;height:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  background:rgba(18,21,25,.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--line);display:flex;padding:0 10px env(safe-area-inset-bottom);
+}
+.tabbar button{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--text-3);font-size:10px;font-weight:600;letter-spacing:.02em;
+}
+.tabbar button i{font-size:22px}
+.tabbar button.on{color:var(--accent)}
+.tabbar button:active{transform:scale(.95)}
+
+/* ---------- Common ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:14px;
+  border-radius:11px;padding:13px 20px;min-height:48px;transition:transform .12s,filter .15s;
+}
+.btn:active{transform:translateY(1px) scale(.985)}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-primary:disabled{background:#1d3a30;color:#4d6a5d;cursor:not-allowed}
+.btn-ghost{background:var(--surface-2);border:1px solid var(--line-strong);color:var(--text)}
+.btn-ghost:hover{background:var(--surface-3)}
+.btn-block{width:100%}
+.tag{display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;border-radius:6px;padding:4px 8px;letter-spacing:.02em;text-transform:uppercase}
+.tag-ok{background:var(--accent-soft);color:var(--accent)}
+.tag-warn{background:var(--warn-soft);color:var(--warn)}
+.tag-bad{background:var(--bad-soft);color:var(--bad)}
+
+/* ---------- Scan ---------- */
+.capture{
+  border:1px solid var(--line);border-radius:16px;background:
+    radial-gradient(120% 90% at 50% 0%, rgba(52,211,153,.07), transparent 55%), var(--surface);
+  padding:30px 22px;text-align:center;position:relative;overflow:hidden;
+}
+.capture .corner{position:absolute;width:26px;height:26px;border:2px solid var(--line-strong)}
+.capture .c1{top:14px;left:14px;border-right:none;border-bottom:none;border-radius:8px 0 0 0}
+.capture .c2{top:14px;right:14px;border-left:none;border-bottom:none;border-radius:0 8px 0 0}
+.capture .c3{bottom:14px;left:14px;border-right:none;border-top:none;border-radius:0 0 0 8px}
+.capture .c4{bottom:14px;right:14px;border-left:none;border-top:none;border-radius:0 0 8px 0}
+.capture i.big{font-size:38px;color:var(--accent)}
+.capture .t{font-weight:700;font-size:16.5px;margin-top:12px}
+.capture .s{color:var(--text-2);font-size:13px;margin-top:4px}
+.capture .row{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.capture.drag{border-color:var(--accent)}
+.thumbs{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;justify-content:center}
+.thumb{position:relative;width:136px;height:86px;border-radius:10px;overflow:hidden;border:1px solid var(--line-strong)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .rm{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:6px;background:rgba(11,13,16,.8);color:#fff;display:grid;place-items:center;font-size:12px}
+.scan-cta{margin-top:22px}
+.privacy-line{
+  display:flex;gap:8px;align-items:flex-start;justify-content:center;color:var(--text-3);font-size:12px;margin-top:14px;
+}
+.cam-wrap{position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:16/10;margin-top:18px}
+.cam-wrap video{width:100%;height:100%;object-fit:cover}
+.cam-frame{position:absolute;inset:12% 8%;border:2px solid rgba(52,211,153,.9);border-radius:10px;box-shadow:0 0 0 999px rgba(0,0,0,.45);pointer-events:none}
+.cam-shutter{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);width:56px;height:56px;border-radius:50%;background:var(--accent);border:4px solid rgba(52,211,153,.35);background-clip:padding-box}
+
+/* ---------- Review ---------- */
+.review-grid{display:grid;gap:18px}
+@media(min-width:980px){.review-grid{grid-template-columns:300px 1fr;align-items:start}}
+.cardpreview{padding:18px}
+.cardpreview .ph{
+  aspect-ratio:1.7;border-radius:10px;background:var(--surface-2);border:1px dashed var(--line-strong);
+  display:grid;place-items:center;color:var(--text-3);font-size:13px;overflow:hidden;
+}
+.cardpreview .ph img{width:100%;height:100%;object-fit:cover}
+.cardpreview .meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-3);margin-top:12px;display:flex;justify-content:space-between}
+.fpanel{padding:24px}
+.fhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.fhead h2{font-size:16px;font-weight:700}
+.fgrid{display:grid;gap:16px}
+@media(min-width:640px){.fgrid{grid-template-columns:1fr 1fr}.fgrid .full{grid-column:1/-1}}
+.field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);margin-bottom:7px}
+.field label .req{color:var(--accent)}
+.field .control{
+  width:100%;background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--radius-sm);
+  padding:12px 13px;font-size:15px;min-height:48px;transition:border-color .15s,box-shadow .15s;
+}
+.field .control:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(52,211,153,.15)}
+.field .err{display:none;font-size:12px;color:var(--bad);margin-top:5px}
+.field.invalid .control{border-color:var(--bad)}
+.field.invalid .err{display:block}
+.ai-strip{
+  display:flex;gap:10px;align-items:center;background:var(--accent-soft);border:1px solid rgba(52,211,153,.25);
+  border-radius:var(--radius-sm);padding:11px 14px;font-size:13px;color:var(--accent);margin-bottom:18px;
+}
+
+/* ---------- Contacts ---------- */
+.searchbar{position:relative;margin-bottom:6px}
+.searchbar i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:17px}
+.searchbar input{
+  width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:13px 14px 13px 42px;min-height:50px;
+}
+.searchbar input:focus{outline:none;border-color:var(--line-strong)}
+.clist{border-top:1px solid var(--line);margin-top:14px}
+.crow{
+  display:flex;align-items:center;gap:14px;padding:16px 4px;border-bottom:1px solid var(--line);
+}
+.crow .avatar{
+  width:40px;height:40px;border-radius:11px;flex:none;display:grid;place-items:center;font-weight:700;font-size:13px;
+  background:var(--surface-2);border:1px solid var(--line-strong);color:var(--accent);
+}
+.crow .meta{flex:1;min-width:0}
+.crow .name{font-weight:700;font-size:14.5px}
+.crow .sub{font-size:12.5px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty{text-align:center;padding:56px 20px;color:var(--text-2)}
+.empty i{font-size:40px;color:var(--text-3)}
+.empty .t{font-weight:700;margin-top:12px;color:var(--text)}
+.empty p{font-size:13px;margin-top:4px}
+
+/* ---------- Admin ---------- */
+.admin-tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto;scrollbar-width:none}
+.admin-tabs::-webkit-scrollbar{display:none}
+.admin-tabs button{
+  padding:11px 2px;font-weight:700;font-size:13.5px;color:var(--text-3);white-space:nowrap;
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s;
+}
+.admin-tabs button.on{color:var(--text);border-bottom-color:var(--accent)}
+.statrow{display:grid;grid-template-columns:1fr 1fr;margin-bottom:26px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+@media(min-width:760px){.statrow{grid-template-columns:repeat(4,1fr)}}
+.statrow .stat{padding:18px;background:var(--surface)}
+.statrow .stat:nth-child(2){border-left:1px solid var(--line)}
+@media(min-width:760px){.statrow .stat+.stat{border-left:1px solid var(--line)}}
+@media(max-width:759px){.statrow .stat:nth-child(n+3){border-top:1px solid var(--line)}}
+.stat .k{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3)}
+.stat .v{font-family:'IBM Plex Mono',monospace;font-size:27px;font-weight:600;margin-top:8px;letter-spacing:-.02em}
+.stat .v .u{font-size:13px;color:var(--text-3)}
+.stat .d{font-size:11.5px;margin-top:4px;color:var(--text-2)}
+.stat .d.up{color:var(--accent)}
+.stat .d.dn{color:var(--bad)}
+.spark{display:flex;align-items:flex-end;gap:6px;height:110px;padding:20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);margin-bottom:26px}
+.spark .b{flex:1;display:flex;flex-direction:column;gap:7px;align-items:center;justify-content:flex-end;height:100%}
+.spark .fill{width:100%;max-width:34px;border-radius:4px;background:var(--surface-3);transition:height .5s cubic-bezier(.16,1,.3,1)}
+.spark .fill.hot{background:var(--accent)}
+.spark .lbl{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text-3)}
+h3.sec{font-size:14px;font-weight:700;margin-bottom:14px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:660px}
+th{
+  text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--text-3);padding:12px 16px;border-bottom:1px solid var(--line);
+}
+td{padding:13px 16px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.015)}
+td .tname{font-weight:700}
+td .tsub{font-size:12px;color:var(--text-2)}
+.icon-btn{
+  width:32px;height:32px;border-radius:8px;display:inline-grid;place-items:center;color:var(--text-2);
+  border:1px solid var(--line-strong);background:var(--surface-2);font-size:14px;
+}
+.icon-btn:hover{color:var(--text);background:var(--surface-3)}
+.actrow{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.actrow:last-child{border-bottom:none}
+.actrow .who{font-weight:600}
+.actrow .when{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-3)}
+.sfrow{display:flex;gap:14px;align-items:flex-start;padding:20px;margin-bottom:16px}
+.sf-logo{width:42px;height:42px;border-radius:11px;background:rgba(1,118,211,.15);display:grid;place-items:center;flex:none}
+.sf-logo i{font-size:21px;color:#4db5ff}
+.maprow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:13px}
+.maprow:last-child{border-bottom:none}
+.maprow .src{font-weight:600}
+.maprow .dst{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--text-2)}
+
+/* ---------- Toast & overlay ---------- */
+.toast{
+  position:fixed;left:50%;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(20px);background:var(--surface-3);border:1px solid var(--line-strong);
+  color:var(--text);border-radius:11px;padding:12px 17px;font-size:13.5px;font-weight:600;
+  display:flex;align-items:center;gap:9px;opacity:0;pointer-events:none;z-index:60;
+  transition:all .3s cubic-bezier(.16,1,.3,1);max-width:calc(100vw - 40px);white-space:nowrap;
+  box-shadow:0 10px 36px rgba(0,0,0,.5);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast i{font-size:16px;color:var(--accent)}
+@media(min-width:900px){.toast{bottom:26px}}
+.scan-overlay{position:fixed;inset:0;background:rgba(11,13,16,.9);backdrop-filter:blur(6px);z-index:50;display:none;place-items:center}
+.scan-overlay.show{display:grid}
+.scanbox{text-align:center;padding:20px}
+.scanline{
+  width:220px;height:130px;border:1px solid var(--line-strong);border-radius:12px;margin:0 auto 20px;position:relative;overflow:hidden;
+  background:var(--surface);
+}
+.scanline::after{
+  content:'';position:absolute;left:8%;right:8%;height:2px;background:var(--accent);border-radius:2px;
+  box-shadow:0 0 14px var(--accent);animation:sweep 1.4s ease-in-out infinite alternate;top:15%;
+}
+@keyframes sweep{to{top:82%}}
+@media(prefers-reduced-motion:reduce){.scanline::after{animation:none;top:50%}}
+.scanbox .t{font-weight:700;font-size:16px}
+.scanbox .s{font-family:'IBM Plex Mono',monospace;color:var(--text-2);font-size:12px;margin-top:6px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="brand-mark"><i class="ph-bold ph-cards"></i></span> SnapCard</div>
+  <div class="spacer"></div>
+  <div class="sync-pill"><span class="dot"></span> SF CONNECTED</div>
+  <button class="role-btn" id="roleChip" title="Switch role (prototype)"><span id="roleAvatar">VP</span></button>
+</header>
+
+<div class="layout">
+  <nav class="rail">
+    <button data-nav="scan" class="on" title="Scan"><i class="ph-bold ph-scan"></i></button>
+    <button data-nav="review" title="Review"><i class="ph-bold ph-pencil-simple-line"></i></button>
+    <button data-nav="contacts" title="Contacts"><i class="ph-bold ph-address-book"></i></button>
+    <div class="gap"></div>
+    <button data-nav="admin" title="Admin"><i class="ph-bold ph-gauge"></i></button>
+  </nav>
+
+  <main class="shell">
+
+    <!-- SCAN -->
+    <section class="view active" data-view="scan">
+      <h1 class="page-title">Capture a card</h1>
+      <p class="page-sub">Drop a photo, pick from the gallery or shoot with the camera. Two images max per card.</p>
+
+      <div class="capture" id="dropzone">
+        <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+        <i class="ph-duotone ph-identification-card big"></i>
+        <div class="t">Add the card</div>
+        <div class="s">Front and back if it has one. JPG or PNG.</div>
+        <div class="row">
+          <button class="btn btn-ghost" id="pickBtn"><i class="ph-bold ph-images"></i> Gallery</button>
+          <button class="btn btn-ghost" id="camToggle"><i class="ph-bold ph-camera"></i> Camera</button>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" multiple hidden>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+
+      <div class="cam-wrap" id="camWrap" hidden>
+        <video id="camVideo" playsinline></video>
+        <div class="cam-frame"></div>
+        <button class="cam-shutter" id="camShutter" aria-label="Capture"></button>
+      </div>
+
+      <button class="btn btn-primary btn-block scan-cta" id="scanBtn" disabled>
+        <i class="ph-bold ph-sparkle"></i> Extract details
+      </button>
+      <div class="privacy-line">
+        <i class="ph-bold ph-lock-simple" style="margin-top:2px"></i>
+        <span>Images are used for text extraction only, then discarded.</span>
+      </div>
+    </section>
+
+    <!-- REVIEW -->
+    <section class="view" data-view="review">
+      <h1 class="page-title">Review &amp; push to Salesforce</h1>
+      <p class="page-sub">Everything below was read from the card. Correct what looks wrong, then push.</p>
+
+      <div class="review-grid">
+        <div class="panel cardpreview">
+          <div class="ph" id="previewPh"><span>Card image appears here after a scan</span></div>
+          <div class="meta"><span id="metaConf">CONFIDENCE -</span><span id="metaTime">-</span></div>
+        </div>
+
+        <form class="panel fpanel" id="reviewForm" novalidate>
+          <div class="ai-strip" id="aiStrip" hidden>
+            <i class="ph-bold ph-magic-wand"></i> Fields pre-filled from the scan. Blank fields could not be read.
+          </div>
+          <div class="fhead">
+            <h2>Lead details</h2>
+            <span class="tag tag-warn">Draft</span>
+          </div>
+          <div class="fgrid">
+            <div class="field" data-f="firstName">
+              <label>First name <span class="req">*</span></label>
+              <input class="control" name="firstName" autocomplete="given-name" placeholder="Rohan">
+              <div class="err">First name is required.</div>
+            </div>
+            <div class="field" data-f="lastName">
+              <label>Last name <span class="req">*</span></label>
+              <input class="control" name="lastName" autocomplete="family-name" placeholder="Deshmukh">
+              <div class="err">Last name is required.</div>
+            </div>
+            <div class="field" data-f="company">
+              <label>Company</label>
+              <input class="control" name="company" autocomplete="organization" placeholder="Company name">
+            </div>
+            <div class="field" data-f="title">
+              <label>Job title</label>
+              <input class="control" name="title" placeholder="Head of Procurement">
+            </div>
+            <div class="field" data-f="email">
+              <label>Email <span class="req">*</span></label>
+              <input class="control" type="email" name="email" inputmode="email" placeholder="name@company.com">
+              <div class="err">Enter a valid email.</div>
+            </div>
+            <div class="field" data-f="phone">
+              <label>Phone <span class="req">*</span></label>
+              <input class="control" type="tel" name="phone" inputmode="tel" placeholder="+91 98xxx xxxxx">
+              <div class="err">Phone is required.</div>
+            </div>
+            <div class="field" data-f="website">
+              <label>Website</label>
+              <input class="control" name="website" inputmode="url" placeholder="company.com">
+            </div>
+            <div class="field" data-f="leadSource">
+              <label>Lead source</label>
+              <select class="control" name="leadSource">
+                <option>Business card scan</option>
+                <option>Trade show</option>
+                <option>Referral</option>
+              </select>
+            </div>
+            <div class="field full" data-f="notes">
+              <label>Notes</label>
+              <textarea class="control" name="notes" rows="3" placeholder="Context: where you met, what was discussed"></textarea>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap">
+            <button type="submit" class="btn btn-primary" style="flex:1;min-width:200px" id="saveBtn">
+              <i class="ph-bold ph-cloud-arrow-up"></i> Push to Salesforce
+            </button>
+            <button type="button" class="btn btn-ghost" id="clearBtn">Discard</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- CONTACTS -->
+    <section class="view" data-view="contacts">
+      <h1 class="page-title">Captured leads</h1>
+      <p class="page-sub">Everything scanned by you, with live Salesforce sync status.</p>
+      <div class="searchbar">
+        <i class="ph-bold ph-magnifying-glass"></i>
+        <input id="searchInput" placeholder="Search name or company" autocomplete="off">
+      </div>
+      <div class="clist" id="contactList"></div>
+    </section>
+
+    <!-- ADMIN -->
+    <section class="view" data-view="admin">
+      <h1 class="page-title">Admin</h1>
+      <p class="page-sub">Sync health, team throughput and Salesforce configuration.</p>
+
+      <div class="admin-tabs" id="adminTabs">
+        <button class="on" data-atab="dash">Overview</button>
+        <button data-atab="records">Records</button>
+        <button data-atab="users">Team</button>
+        <button data-atab="sf">Salesforce</button>
+      </div>
+
+      <div class="atab" data-apane="dash">
+        <div class="statrow">
+          <div class="stat"><div class="k">Total scans</div><div class="v" id="stScans">0</div><div class="d up">+12% this week</div></div>
+          <div class="stat"><div class="k">Synced</div><div class="v" id="stSynced">0</div><div class="d up">98.2% success</div></div>
+          <div class="stat"><div class="k">Pending</div><div class="v" id="stPending">0</div><div class="d">in queue</div></div>
+          <div class="stat"><div class="k">Failed</div><div class="v" id="stFailed">0</div><div class="d dn" id="stFailedNote">retry required</div></div>
+        </div>
+        <h3 class="sec">Scans per day</h3>
+        <div class="spark" id="bars"></div>
+        <h3 class="sec">Recent activity</h3>
+        <div class="panel" style="padding:6px 18px" id="activityList"></div>
+      </div>
+
+      <div class="atab" data-apane="records" hidden>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Contact</th><th>Company</th><th>Scanned by</th><th>Status</th><th>Date</th><th></th></tr></thead>
+            <tbody id="recordsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="atab" data-apane="users" hidden>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+          <button class="btn btn-primary" style="min-height:44px;padding:10px 18px" id="inviteBtn"><i class="ph-bold ph-user-plus"></i> Invite member</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Member</th><th>Role</th><th>Scans</th><th>Last active</th><th></th></tr></thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="atab" data-apane="sf" hidden>
+        <div class="panel sfrow">
+          <div class="sf-logo"><i class="ph-fill ph-cloud"></i></div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <strong style="font-size:15px">Salesforce org</strong>
+              <span class="tag tag-ok">Connected</span>
+            </div>
+            <p style="font-size:13px;color:var(--text-2);margin-top:5px">thinkvibes.my.salesforce.com. Scans create Leads, assigned round robin to the sales queue.</p>
+            <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+              <button class="btn btn-ghost" style="min-height:40px;padding:8px 15px" onclick="toast('Connection test passed')"><i class="ph-bold ph-plugs-connected"></i> Test</button>
+              <button class="btn btn-ghost" style="min-height:40px;padding:8px 15px" onclick="toast('Sync queue flushed')"><i class="ph-bold ph-arrows-clockwise"></i> Sync now</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel" style="padding:20px">
+          <h3 class="sec" style="margin-bottom:6px">Field mapping</h3>
+          <p style="font-size:12.5px;color:var(--text-2);margin-bottom:8px">Scanned fields to Salesforce Lead object.</p>
+          <div class="maprow"><span class="src">First / Last name</span><span class="dst">Lead.FirstName / LastName</span></div>
+          <div class="maprow"><span class="src">Company</span><span class="dst">Lead.Company</span></div>
+          <div class="maprow"><span class="src">Email</span><span class="dst">Lead.Email</span></div>
+          <div class="maprow"><span class="src">Phone</span><span class="dst">Lead.Phone</span></div>
+          <div class="maprow"><span class="src">Job title</span><span class="dst">Lead.Title</span></div>
+          <div class="maprow"><span class="src">Notes</span><span class="dst">Lead.Description</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<nav class="tabbar">
+  <button data-nav="scan" class="on"><i class="ph-bold ph-scan"></i>Scan</button>
+  <button data-nav="review"><i class="ph-bold ph-pencil-simple-line"></i>Review</button>
+  <button data-nav="contacts"><i class="ph-bold ph-address-book"></i>Leads</button>
+  <button data-nav="admin"><i class="ph-bold ph-gauge"></i>Admin</button>
+</nav>
+
+<div class="scan-overlay" id="scanOverlay">
+  <div class="scanbox">
+    <div class="scanline"></div>
+    <div class="t">Extracting text</div>
+    <div class="s" id="scanStep">detecting regions…</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="ph-fill ph-check-circle" id="toastIcon"></i><span id="toastMsg"></span></div>
+
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+const LS_KEY = 'snapcard-nightshift';
+const state = {
+  images: [],
+  contacts: JSON.parse(localStorage.getItem(LS_KEY) || 'null') || seed(),
+  role: 'rep'
+};
+function persist(){ localStorage.setItem(LS_KEY, JSON.stringify(state.contacts)); }
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString(); }
+function seed(){
+  return [
+    {id:1,firstName:'Meera',lastName:'Kulkarni',company:'Trivedi Polymers',title:'Purchase Manager',email:'meera.k@trivedipolymers.in',phone:'+91 98220 41573',status:'synced',by:'Vaibhav Parmar',date:daysAgo(1)},
+    {id:2,firstName:'Arjun',lastName:'Nair',company:'Coastline Logistics',title:'Regional Head',email:'arjun.nair@coastlinelog.com',phone:'+91 90040 22817',status:'synced',by:'Sneha Rathod',date:daysAgo(2)},
+    {id:3,firstName:'Farhan',lastName:'Sheikh',company:'Meridian Tooling',title:'Director, Operations',email:'farhan@meridiantooling.co',phone:'+91 98191 77320',status:'pending',by:'Vaibhav Parmar',date:daysAgo(2)},
+    {id:4,firstName:'Kavita',lastName:'Bhonsle',company:'Anchor Fasteners',title:'Sales Lead',email:'kavita.b@anchorfast.in',phone:'+91 99675 10284',status:'failed',by:'Rahul Chavan',date:daysAgo(4)}
+  ];
+}
+
+/* nav */
+const views = document.querySelectorAll('.view');
+function nav(name){
+  views.forEach(v => v.classList.toggle('active', v.dataset.view === name));
+  document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === name));
+  if (name==='contacts') renderContacts();
+  if (name==='admin') renderAdmin();
+  window.scrollTo({top:0});
+}
+document.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => nav(b.dataset.nav)));
+document.getElementById('roleChip').addEventListener('click', () => {
+  state.role = state.role==='rep'?'admin':'rep';
+  document.getElementById('roleAvatar').textContent = state.role==='rep'?'VP':'AD';
+  toast(state.role==='admin'?'Admin view':'Sales rep view');
+});
+
+/* upload */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const thumbs = document.getElementById('thumbs');
+const scanBtn = document.getElementById('scanBtn');
+document.getElementById('pickBtn').addEventListener('click', () => fileInput.click());
+['dragover','dragenter'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+fileInput.addEventListener('change', () => { addFiles(fileInput.files); fileInput.value=''; });
+function addFiles(files){
+  for (const f of files){
+    if (!f.type.startsWith('image/')) continue;
+    if (state.images.length >= 2){ toast('Max 2 images per card','warning'); break; }
+    state.images.push({url:URL.createObjectURL(f), name:f.name});
+  }
+  renderThumbs();
+}
+function renderThumbs(){
+  thumbs.innerHTML = state.images.map((im,i) =>
+    `<div class="thumb"><img src="${im.url}" alt="Card ${i+1}"><button class="rm" data-rm="${i}"><i class="ph-bold ph-x"></i></button></div>`).join('');
+  thumbs.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation(); state.images.splice(+b.dataset.rm,1); renderThumbs();
+  }));
+  scanBtn.disabled = state.images.length === 0;
+}
+
+/* camera */
+let camStream=null;
+const camWrap = document.getElementById('camWrap'), camVideo = document.getElementById('camVideo');
+document.getElementById('camToggle').addEventListener('click', async () => {
+  if (camStream){ stopCam(); return; }
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    camVideo.srcObject = camStream; await camVideo.play(); camWrap.hidden = false;
+  }catch{ toast('Camera unavailable. Use gallery.','warning'); }
+});
+document.getElementById('camShutter').addEventListener('click', () => {
+  const c=document.createElement('canvas'); c.width=camVideo.videoWidth; c.height=camVideo.videoHeight;
+  c.getContext('2d').drawImage(camVideo,0,0);
+  c.toBlob(b => { addFiles([new File([b],'capture.jpg',{type:'image/jpeg'})]); toast('Captured'); stopCam(); });
+});
+function stopCam(){ if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;} camWrap.hidden=true; }
+
+/* scan sim */
+const steps=['detecting regions…','reading identity…','reading contact info…','structuring fields…'];
+scanBtn.addEventListener('click', async () => {
+  const ov=document.getElementById('scanOverlay'); ov.classList.add('show');
+  const st=document.getElementById('scanStep');
+  for (const s of steps){ st.textContent=s; await wait(500); }
+  ov.classList.remove('show');
+  const f=document.getElementById('reviewForm').elements;
+  Object.entries({firstName:'Vaibhav',lastName:'Parmar',company:'ThinkVibes',title:'CEO',email:'vaibhav.parmar@thinkvibes.com',phone:'+91 98765 43210',website:'thinkvibes.com'})
+    .forEach(([k,v])=>{ if(f[k]) f[k].value=v; });
+  document.getElementById('aiStrip').hidden=false;
+  if (state.images[0]) document.getElementById('previewPh').innerHTML=`<img src="${state.images[0].url}" alt="Scanned card">`;
+  document.getElementById('metaConf').textContent='CONFIDENCE 94%  <!-- mock -->'.split('  ')[0];
+  document.getElementById('metaTime').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  nav('review'); toast('Card read. Review the details.');
+});
+function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* form */
+const form=document.getElementById('reviewForm');
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  let ok=true;
+  const need={firstName:v=>v.trim(),lastName:v=>v.trim(),email:v=>/^\S+@\S+\.\S+$/.test(v),phone:v=>v.trim()};
+  for (const [n,t] of Object.entries(need)){
+    const fl=form.querySelector(`[data-f="${n}"]`), bad=!t(form.elements[n].value);
+    fl.classList.toggle('invalid',bad); if(bad) ok=false;
+  }
+  if(!ok){ toast('Fix the highlighted fields','warning'); return; }
+  const btn=document.getElementById('saveBtn');
+  btn.disabled=true; btn.innerHTML='<i class="ph-bold ph-circle-notch" style="animation:spin 1s linear infinite"></i> Pushing…';
+  await wait(1300);
+  const f=form.elements;
+  state.contacts.unshift({id:Date.now(),firstName:f.firstName.value.trim(),lastName:f.lastName.value.trim(),company:f.company.value.trim(),title:f.title.value.trim(),email:f.email.value.trim(),phone:f.phone.value.trim(),status:'synced',by:'Vaibhav Parmar',date:new Date().toISOString()});
+  persist(); form.reset(); state.images=[]; renderThumbs();
+  document.getElementById('aiStrip').hidden=true;
+  document.getElementById('previewPh').innerHTML='<span>Card image appears here after a scan</span>';
+  btn.disabled=false; btn.innerHTML='<i class="ph-bold ph-cloud-arrow-up"></i> Push to Salesforce';
+  nav('contacts'); toast('Lead created in Salesforce');
+});
+document.getElementById('clearBtn').addEventListener('click',()=>{ form.reset(); form.querySelectorAll('.invalid').forEach(x=>x.classList.remove('invalid')); });
+const style=document.createElement('style'); style.textContent='@keyframes spin{to{transform:rotate(360deg)}}'; document.head.appendChild(style);
+
+/* contacts */
+function tagFor(s){
+  if(s==='synced') return '<span class="tag tag-ok">Synced</span>';
+  if(s==='pending') return '<span class="tag tag-warn">Pending</span>';
+  return '<span class="tag tag-bad">Failed</span>';
+}
+function fmtDate(iso){
+  const d=new Date(iso),diff=Math.floor((Date.now()-d)/864e5);
+  if(diff===0) return 'Today'; if(diff===1) return 'Yesterday';
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+function renderContacts(){
+  const q=(document.getElementById('searchInput').value||'').toLowerCase();
+  const list=state.contacts.filter(c=>(`${c.firstName} ${c.lastName} ${c.company}`).toLowerCase().includes(q));
+  const el=document.getElementById('contactList');
+  if(!list.length){
+    el.innerHTML=`<div class="empty"><i class="ph-duotone ph-address-book"></i><div class="t">${q?'No matches':'Nothing captured yet'}</div><p>${q?'Try another search.':'Scan your first card to see it here.'}</p></div>`;
+    return;
+  }
+  el.innerHTML=list.map(c=>`<div class="crow">
+    <div class="avatar">${c.firstName[0]}${c.lastName[0]}</div>
+    <div class="meta"><div class="name">${c.firstName} ${c.lastName}</div><div class="sub">${c.title?c.title+' · ':''}${c.company||'No company'}</div></div>
+    ${tagFor(c.status)}
+  </div>`).join('');
+}
+document.getElementById('searchInput').addEventListener('input',renderContacts);
+
+/* admin */
+document.getElementById('adminTabs').addEventListener('click',e=>{
+  const b=e.target.closest('[data-atab]'); if(!b) return;
+  document.querySelectorAll('[data-atab]').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.atab').forEach(p=>p.hidden=p.dataset.apane!==b.dataset.atab);
+});
+const TEAM=[
+  {name:'Vaibhav Parmar',email:'vaibhav.parmar@thinkvibes.com',role:'Admin',scans:34,active:'2 min ago'},
+  {name:'Sneha Rathod',email:'sneha.r@thinkvibes.com',role:'Sales Rep',scans:27,active:'1 hr ago'},
+  {name:'Rahul Chavan',email:'rahul.c@thinkvibes.com',role:'Sales Rep',scans:19,active:'Yesterday'},
+  {name:'Divya Menon',email:'divya.m@thinkvibes.com',role:'Manager',scans:11,active:'3 days ago'}
+];
+function renderAdmin(){
+  const c=state.contacts;
+  stScans.textContent=c.length;
+  stSynced.textContent=c.filter(x=>x.status==='synced').length;
+  stPending.textContent=c.filter(x=>x.status==='pending').length;
+  const failed=c.filter(x=>x.status==='failed').length;
+  stFailed.textContent=failed;
+  stFailedNote.textContent=failed?'retry required':'all clear';
+  const data=[3,5,2,7,4,6,Math.max(1,Math.min(c.length,9))], labels=['Fri','Sat','Sun','Mon','Tue','Wed','Today'], max=Math.max(...data);
+  bars.innerHTML=data.map((v,i)=>`<div class="b"><div class="fill ${i===6?'hot':''}" style="height:${Math.round(v/max*100)}%"></div><div class="lbl">${labels[i]}</div></div>`).join('');
+  activityList.innerHTML=c.slice(0,4).map(x=>`<div class="actrow"><span class="who">${x.by} scanned ${x.firstName} ${x.lastName}</span><span class="when">${fmtDate(x.date)}</span></div>`).join('')||'<p style="font-size:13px;color:var(--text-2);padding:12px 0">No activity yet.</p>';
+  recordsBody.innerHTML=c.map(x=>`<tr>
+    <td><div class="tname">${x.firstName} ${x.lastName}</div><div class="tsub">${x.email}</div></td>
+    <td>${x.company||'-'}</td><td>${x.by}</td><td>${tagFor(x.status)}</td><td>${fmtDate(x.date)}</td>
+    <td style="text-align:right;white-space:nowrap">
+      ${x.status==='failed'?`<button class="icon-btn" data-retry="${x.id}" title="Retry"><i class="ph-bold ph-arrow-clockwise"></i></button> `:''}
+      <button class="icon-btn" data-del="${x.id}" title="Delete"><i class="ph-bold ph-trash"></i></button>
+    </td></tr>`).join('');
+  document.querySelectorAll('[data-retry]').forEach(b=>b.addEventListener('click',()=>{
+    const r=state.contacts.find(x=>x.id==b.dataset.retry);
+    if(r){r.status='synced';persist();renderAdmin();toast('Synced to Salesforce');}
+  }));
+  document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
+    state.contacts=state.contacts.filter(x=>x.id!=b.dataset.del);persist();renderAdmin();toast('Record deleted');
+  }));
+  usersBody.innerHTML=TEAM.map(u=>`<tr>
+    <td><div class="tname">${u.name}</div><div class="tsub">${u.email}</div></td>
+    <td>${u.role}</td><td class="mono">${u.scans}</td><td>${u.active}</td>
+    <td style="text-align:right"><button class="icon-btn" onclick="toast('Member settings (prototype)')"><i class="ph-bold ph-dots-three"></i></button></td>
+  </tr>`).join('');
+}
+document.getElementById('inviteBtn').addEventListener('click',()=>toast('Invite sent (prototype)'));
+
+/* toast */
+let toastTimer;
+function toast(msg,icon='check-circle'){
+  toastMsg.textContent=msg;
+  toastIcon.className=`ph-fill ph-${icon==='warning'?'warning-circle':icon}`;
+  const t=document.getElementById('toast');
+  t.classList.add('show'); clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+renderThumbs();
+</script>
+</body>
+</html>

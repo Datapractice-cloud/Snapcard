@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fafafa">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>SnapCard Prototypes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Sora',system-ui,sans-serif;background:#f4f4f2;color:#1c1c1a;
+  min-height:100dvh;display:grid;place-items:center;padding:28px 20px;font-size:15px;line-height:1.55;
+}
+.wrap{max-width:860px;width:100%}
+h1{font-size:26px;font-weight:800;letter-spacing:-.03em}
+.lede{color:#63635e;font-size:14px;margin:8px 0 30px;max-width:56ch}
+.grid{display:grid;gap:16px}
+@media(min-width:760px){.grid{grid-template-columns:repeat(3,1fr)}}
+a.card{
+  display:block;background:#fff;border:1px solid #e4e4e1;border-radius:18px;padding:22px;
+  text-decoration:none;color:inherit;transition:transform .18s cubic-bezier(.16,1,.3,1),box-shadow .18s;
+}
+a.card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(28,28,26,.09)}
+.swatch{height:72px;border-radius:12px;margin-bottom:16px;display:flex;align-items:flex-end;padding:10px;gap:6px}
+.swatch span{width:22px;height:8px;border-radius:4px}
+.s1{background:linear-gradient(135deg,#f7f8fa 55%,#eff4ff)}
+.s1 span:nth-child(1){background:#1d4ed8}.s1 span:nth-child(2){background:#16181d}.s1 span:nth-child(3){background:#d0d5dd}
+.s2{background:linear-gradient(135deg,#0b0d10 55%,#121519)}
+.s2 span:nth-child(1){background:#34d399}.s2 span:nth-child(2){background:#323a44}.s2 span:nth-child(3){background:#9aa4b0}
+.s3{background:linear-gradient(135deg,#fafafa 55%,#fff0e8)}
+.s3 span:nth-child(1){background:#c2410c}.s3 span:nth-child(2){background:#1c1c1a}.s3 span:nth-child(3){background:#cfcfcc}
+a.card h2{font-size:16px;font-weight:800;letter-spacing:-.01em}
+a.card p{font-size:12.5px;color:#63635e;margin-top:6px}
+.note{margin-top:26px;font-size:12.5px;color:#98978f;max-width:64ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SnapCard prototypes</h1>
+  <p class="lede">Three working directions for the business card scanner. Each one includes the scan flow, review form, contacts list and a full admin panel. Open on a phone and use "Add to Home Screen" to test the PWA feel.</p>
+  <div class="grid">
+    <a class="card" href="layout-1.html">
+      <div class="swatch s1"><span></span><span></span><span></span></div>
+      <h2>1 · Cobalt</h2>
+      <p>Light, professional, Salesforce-adjacent. Sidebar on desktop, tab bar on mobile.</p>
+    </a>
+    <a class="card" href="layout-2.html">
+      <div class="swatch s2"><span></span><span></span><span></span></div>
+      <h2>2 · Nightshift</h2>
+      <p>Dark, technical, field-ops feel. Icon rail on desktop, mono data styling.</p>
+    </a>
+    <a class="card" href="layout-3.html">
+      <div class="swatch s3"><span></span><span></span><span></span></div>
+      <h2>3 · Signal</h2>
+      <p>Warm minimal with a guided 3-step wizard: capture, review, saved.</p>
+    </a>
+  </div>
+  <p class="note">Prototype note: card reading and Salesforce sync are simulated. Saved contacts persist in the browser via localStorage, separately per layout.</p>
+</div>
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

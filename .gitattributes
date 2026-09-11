@@ -1,0 +1,5 @@
+# Deploys run on Linux; keep LF in the repository.
+* text=auto eol=lf
+*.ico binary
+*.png binary
+*.jpg binary

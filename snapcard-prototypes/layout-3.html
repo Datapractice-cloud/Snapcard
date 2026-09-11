@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fafafa">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>SnapCard - Signal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Fragment+Mono&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+:root{
+  --bg:#fafafa; --surface:#ffffff; --surface-2:#f1f1f0;
+  --line:#e6e6e4; --line-strong:#cfcfcc;
+  --text:#1c1c1a; --text-2:#63635e; --text-3:#98978f;
+  --accent:#c2410c; --accent-strong:#9a3412; --accent-soft:#fff0e8;
+  --ok:#15803d; --ok-soft:#f0fdf4; --warn:#a16207; --warn-soft:#fefce8;
+  --bad:#b91c1c; --bad-soft:#fef2f2;
+  --radius:16px; --radius-sm:11px;
+  --nav-h:64px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  min-height:100dvh;font-size:14.5px;line-height:1.55;
+  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));
+}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
+::placeholder{color:var(--text-3)}
+.mono{font-family:'Fragment Mono',monospace}
+
+/* ---------- Header ---------- */
+.hdr{
+  position:sticky;top:0;z-index:30;background:rgba(250,250,250,.9);backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+  padding:calc(11px + env(safe-area-inset-top)) 20px 11px;
+  display:flex;align-items:center;gap:16px;
+}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;letter-spacing:-.02em}
+.brand .mark{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:15px}
+.hdr .spacer{flex:1}
+.hdr-nav{display:none}
+@media(min-width:900px){
+  body{padding-bottom:0}
+  .tabbar{display:none}
+  .hdr-nav{display:flex;gap:4px;background:var(--surface-2);border-radius:999px;padding:4px}
+  .hdr-nav button{
+    padding:8px 18px;border-radius:999px;font-weight:700;font-size:13px;color:var(--text-2);transition:all .18s;
+  }
+  .hdr-nav button.on{background:var(--text);color:#fff}
+}
+.role-pill{
+  display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--text-2);
+  border:1px solid var(--line);border-radius:999px;padding:6px 13px 6px 7px;background:var(--surface);
+}
+.role-pill .dot{width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:10px;font-weight:800}
+
+/* ---------- Shell / views ---------- */
+.shell{max-width:1060px;margin:0 auto;padding:26px 20px 48px}
+@media(min-width:900px){.shell{padding:38px 40px 70px}}
+.view{display:none}
+.view.active{display:block;animation:rise .3s cubic-bezier(.16,1,.3,1)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.view.active{animation:none}}
+h1.title{font-size:25px;font-weight:800;letter-spacing:-.03em}
+p.sub{color:var(--text-2);font-size:13.5px;margin:6px 0 26px;max-width:52ch}
+
+/* ---------- Mobile tab bar ---------- */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;height:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.95);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);display:flex;padding:0 12px env(safe-area-inset-bottom);
+}
+.tabbar button{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--text-3);font-size:10.5px;font-weight:700;
+}
+.tabbar button i{font-size:22px}
+.tabbar button.on{color:var(--accent)}
+.tabbar button:active{transform:scale(.95)}
+
+/* ---------- Stepper ---------- */
+.stepper{display:flex;align-items:center;gap:0;margin-bottom:28px;max-width:520px}
+.step{display:flex;align-items:center;gap:9px;flex:none}
+.step .n{
+  width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:800;
+  background:var(--surface-2);color:var(--text-3);border:1.5px solid var(--line);transition:all .25s;
+}
+.step .l{font-size:12.5px;font-weight:700;color:var(--text-3);transition:color .25s}
+.step.on .n{background:var(--accent);border-color:var(--accent);color:#fff}
+.step.on .l{color:var(--text)}
+.step.done .n{background:var(--ok-soft);border-color:#bbe7c8;color:var(--ok)}
+.step.done .l{color:var(--text-2)}
+.step-line{flex:1;height:1.5px;background:var(--line);margin:0 12px;min-width:24px}
+
+/* ---------- Buttons / chips ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:14px;
+  border-radius:999px;padding:13px 24px;min-height:48px;transition:transform .12s,background .15s;
+}
+.btn:active{transform:translateY(1px) scale(.98)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-strong)}
+.btn-primary:disabled{background:#e9b8a0;cursor:not-allowed}
+.btn-ghost{background:var(--surface);border:1px solid var(--line-strong);color:var(--text)}
+.btn-ghost:hover{background:var(--surface-2)}
+.btn-block{width:100%}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;border-radius:999px;padding:4px 11px}
+.chip-ok{background:var(--ok-soft);color:var(--ok)}
+.chip-warn{background:var(--warn-soft);color:var(--warn)}
+.chip-bad{background:var(--bad-soft);color:var(--bad)}
+
+/* ---------- Capture step ---------- */
+.cap-grid{display:grid;gap:16px}
+@media(min-width:860px){.cap-grid{grid-template-columns:1.2fr .8fr;align-items:start}}
+.dropzone{
+  background:var(--surface);border:1.5px dashed var(--line-strong);border-radius:var(--radius);
+  padding:40px 24px;text-align:center;transition:all .2s;
+}
+.dropzone.drag{border-color:var(--accent);background:var(--accent-soft)}
+.dropzone .ic{
+  width:58px;height:58px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-size:26px;margin:0 auto;
+}
+.dropzone .t{font-weight:800;font-size:15.5px;margin-top:14px}
+.dropzone .s{color:var(--text-2);font-size:13px;margin-top:4px}
+.dropzone .row{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.thumbs{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.thumb{position:relative;width:140px;height:88px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .rm{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(28,28,26,.75);color:#fff;display:grid;place-items:center;font-size:11px}
+.tips{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.tips h3{font-size:13.5px;font-weight:800;margin-bottom:12px}
+.tip{display:flex;gap:11px;padding:9px 0;font-size:13px;color:var(--text-2);align-items:flex-start}
+.tip i{color:var(--accent);font-size:16px;margin-top:1px;flex:none}
+.cam-wrap{position:relative;border-radius:var(--radius);overflow:hidden;background:#111;aspect-ratio:16/10;margin-top:14px}
+.cam-wrap video{width:100%;height:100%;object-fit:cover}
+.cam-frame{position:absolute;inset:12% 8%;border:2px solid #fff;border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.4);pointer-events:none}
+.cam-shutter{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);width:56px;height:56px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.4);background-clip:padding-box}
+
+/* ---------- Review step ---------- */
+.fcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
+.fgrid{display:grid;gap:16px}
+@media(min-width:640px){.fgrid{grid-template-columns:1fr 1fr}.fgrid .full{grid-column:1/-1}}
+.field label{display:block;font-size:12px;font-weight:800;margin-bottom:7px}
+.field label .req{color:var(--accent)}
+.field .control{
+  width:100%;background:var(--bg);border:1px solid var(--line-strong);border-radius:var(--radius-sm);
+  padding:12px 14px;font-size:14.5px;min-height:48px;transition:all .15s;
+}
+.field .control:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(194,65,12,.12);background:var(--surface)}
+.field .err{display:none;font-size:12px;color:var(--bad);margin-top:5px;font-weight:700}
+.field.invalid .control{border-color:var(--bad)}
+.field.invalid .err{display:block}
+.readnote{
+  display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--accent-strong);
+  background:var(--accent-soft);border-radius:var(--radius-sm);padding:12px 15px;margin-bottom:20px;
+}
+.readnote i{margin-top:1px}
+
+/* ---------- Done step ---------- */
+.done-wrap{text-align:center;padding:40px 20px;max-width:480px;margin:0 auto}
+.done-ic{
+  width:76px;height:76px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;
+  place-items:center;font-size:38px;margin:0 auto 20px;animation:pop .45s cubic-bezier(.16,1,.3,1);
+}
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){.done-ic{animation:none}}
+.done-wrap h2{font-size:21px;font-weight:800;letter-spacing:-.02em}
+.done-wrap p{color:var(--text-2);font-size:13.5px;margin:8px 0 24px}
+.done-summary{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;text-align:left;margin-bottom:22px}
+.done-summary .row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line)}
+.done-summary .row:last-child{border-bottom:none}
+.done-summary .k{color:var(--text-2)}
+.done-summary .v{font-weight:700}
+
+/* ---------- Contacts ---------- */
+.searchbar{position:relative;margin-bottom:18px}
+.searchbar i{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:17px}
+.searchbar input{
+  width:100%;background:var(--surface);border:1px solid var(--line);border-radius:999px;
+  padding:13px 16px 13px 44px;min-height:50px;
+}
+.searchbar input:focus{outline:none;border-color:var(--line-strong)}
+.cgrid{display:grid;gap:12px}
+@media(min-width:700px){.cgrid{grid-template-columns:1fr 1fr}}
+@media(min-width:1000px){.cgrid{grid-template-columns:1fr 1fr 1fr}}
+.ccard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;transition:border-color .15s}
+.ccard:hover{border-color:var(--line-strong)}
+.ccard .top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.ccard .avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.ccard .name{font-weight:800;font-size:14.5px}
+.ccard .role{font-size:12px;color:var(--text-2)}
+.ccard .line{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--text-2);padding:3px 0;min-width:0}
+.ccard .line i{font-size:13px;color:var(--text-3);flex:none}
+.ccard .line span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ccard .foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.ccard .when{font-size:11.5px;color:var(--text-3)}
+.empty{text-align:center;padding:56px 20px;color:var(--text-2);grid-column:1/-1}
+.empty i{font-size:40px;color:var(--text-3)}
+.empty .t{font-weight:800;margin-top:12px;color:var(--text)}
+.empty p{font-size:13px;margin-top:4px}
+
+/* ---------- Admin ---------- */
+.admin-wrap{display:grid;gap:24px}
+@media(min-width:900px){.admin-wrap{grid-template-columns:190px 1fr;align-items:start}}
+.admin-side{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.admin-side::-webkit-scrollbar{display:none}
+@media(min-width:900px){
+  .admin-side{flex-direction:column;position:sticky;top:92px}
+}
+.admin-side button{
+  display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;font-weight:700;font-size:13px;
+  color:var(--text-2);white-space:nowrap;border:1px solid var(--line);background:var(--surface);flex:none;text-align:left;
+}
+@media(min-width:900px){.admin-side button{border:none;background:none;border-radius:11px;padding:10px 13px}}
+.admin-side button i{font-size:17px}
+.admin-side button.on{background:var(--text);color:#fff;border-color:var(--text)}
+@media(min-width:900px){.admin-side button.on{background:var(--accent-soft);color:var(--accent-strong)}}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
+@media(min-width:760px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:17px}
+.stat .k{font-size:11.5px;font-weight:800;color:var(--text-2)}
+.stat .v{font-family:'Fragment Mono',monospace;font-size:25px;margin-top:7px}
+.stat .d{font-size:11px;margin-top:3px;font-weight:700;color:var(--text-3)}
+.stat .d.up{color:var(--ok)}.stat .d.dn{color:var(--bad)}
+.chartbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:22px}
+.chartbox h3{font-size:13.5px;font-weight:800;margin-bottom:16px}
+.bars{display:flex;align-items:flex-end;gap:8px;height:110px}
+.bars .b{flex:1;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:flex-end;height:100%}
+.bars .fill{width:100%;max-width:36px;border-radius:8px;background:var(--surface-2);transition:height .5s cubic-bezier(.16,1,.3,1)}
+.bars .fill.hot{background:var(--accent)}
+.bars .lbl{font-size:10px;color:var(--text-3);font-weight:700}
+.tblbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+th{text-align:left;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);padding:13px 18px;border-bottom:1px solid var(--line)}
+td{padding:13px 18px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:none}
+td .tname{font-weight:800}
+td .tsub{font-size:11.5px;color:var(--text-2)}
+.icon-btn{width:33px;height:33px;border-radius:50%;display:inline-grid;place-items:center;color:var(--text-2);border:1px solid var(--line);background:var(--surface);font-size:14px}
+.icon-btn:hover{background:var(--surface-2);color:var(--text)}
+.actline{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:13px}
+.actline:last-child{border-bottom:none}
+.actline .when{font-size:11.5px;color:var(--text-3)}
+.sfbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:16px;display:flex;gap:15px;align-items:flex-start}
+.sf-logo{width:44px;height:44px;border-radius:50%;background:#e8f4fd;display:grid;place-items:center;flex:none}
+.sf-logo i{font-size:21px;color:#0176d3}
+.maprow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:13px}
+.maprow:last-child{border-bottom:none}
+.maprow .src{font-weight:700}
+.maprow .dst{font-family:'Fragment Mono',monospace;font-size:11px;color:var(--text-2)}
+
+/* ---------- Overlay & toast ---------- */
+.scan-overlay{position:fixed;inset:0;background:rgba(250,250,250,.92);backdrop-filter:blur(6px);z-index:50;display:none;place-items:center}
+.scan-overlay.show{display:grid}
+.pulse{
+  width:72px;height:72px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;
+  margin:0 auto 18px;color:var(--accent);font-size:30px;animation:pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse{50%{transform:scale(1.12)}}
+@media(prefers-reduced-motion:reduce){.pulse{animation:none}}
+.scanbox{text-align:center}
+.scanbox .t{font-weight:800;font-size:16px}
+.scanbox .s{color:var(--text-2);font-size:13px;margin-top:5px}
+.toast{
+  position:fixed;left:50%;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;border-radius:999px;
+  padding:12px 20px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:9px;
+  opacity:0;pointer-events:none;z-index:60;transition:all .3s cubic-bezier(.16,1,.3,1);
+  max-width:calc(100vw - 40px);white-space:nowrap;box-shadow:0 10px 34px rgba(28,28,26,.28);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast i{font-size:16px;color:#fdba74}
+@media(min-width:900px){.toast{bottom:28px}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="brand"><span class="mark"><i class="ph-bold ph-cards"></i></span> SnapCard</div>
+  <div class="spacer"></div>
+  <nav class="hdr-nav">
+    <button data-nav="scan" class="on">Scanner</button>
+    <button data-nav="contacts">Contacts</button>
+    <button data-nav="admin">Admin</button>
+  </nav>
+  <div class="spacer"></div>
+  <button class="role-pill" id="roleChip" title="Switch role (prototype)">
+    <span class="dot" id="roleAvatar">VP</span><span id="roleName">Sales Rep</span>
+  </button>
+</header>
+
+<main class="shell">
+
+  <!-- ============ SCANNER (stepper flow) ============ -->
+  <section class="view active" data-view="scan">
+    <h1 class="title">New contact</h1>
+    <p class="sub">Three steps: capture the card, review what we read, and it lands in Salesforce.</p>
+
+    <div class="stepper" id="stepper">
+      <div class="step on" data-step="1"><span class="n">1</span><span class="l">Capture</span></div>
+      <div class="step-line"></div>
+      <div class="step" data-step="2"><span class="n">2</span><span class="l">Review</span></div>
+      <div class="step-line"></div>
+      <div class="step" data-step="3"><span class="n">3</span><span class="l">Saved</span></div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="wstep" data-wstep="1">
+      <div class="cap-grid">
+        <div>
+          <div class="dropzone" id="dropzone">
+            <div class="ic"><i class="ph-bold ph-identification-card"></i></div>
+            <div class="t">Capture the business card</div>
+            <div class="s">Drop an image, browse the gallery, or open the camera.</div>
+            <div class="row">
+              <button class="btn btn-ghost" id="pickBtn"><i class="ph-bold ph-images"></i> Browse</button>
+              <button class="btn btn-ghost" id="camToggle"><i class="ph-bold ph-camera"></i> Camera</button>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" multiple hidden>
+          </div>
+          <div class="cam-wrap" id="camWrap" hidden>
+            <video id="camVideo" playsinline></video>
+            <div class="cam-frame"></div>
+            <button class="cam-shutter" id="camShutter" aria-label="Capture"></button>
+          </div>
+          <div class="thumbs" id="thumbs"></div>
+          <button class="btn btn-primary btn-block" id="scanBtn" disabled style="margin-top:18px">
+            <i class="ph-bold ph-sparkle"></i> Read the card
+          </button>
+        </div>
+        <aside class="tips">
+          <h3>For a clean read</h3>
+          <div class="tip"><i class="ph-bold ph-sun"></i> Shoot in even light. Avoid glare off glossy cards.</div>
+          <div class="tip"><i class="ph-bold ph-crop"></i> Fill the frame with the card. Skip the table clutter.</div>
+          <div class="tip"><i class="ph-bold ph-arrows-counter-clockwise"></i> Got a two-sided card? Add both sides, max 2 images.</div>
+          <div class="tip"><i class="ph-bold ph-lock-simple"></i> Images are read once, then discarded. Only the text is kept.</div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="wstep" data-wstep="2" hidden>
+      <form class="fcard" id="reviewForm" novalidate>
+        <div class="readnote">
+          <i class="ph-bold ph-magic-wand"></i>
+          <span>We pre-filled these from the card. Anything blank could not be read. Verify, then save.</span>
+        </div>
+        <div class="fgrid">
+          <div class="field" data-f="firstName">
+            <label>First name <span class="req">*</span></label>
+            <input class="control" name="firstName" autocomplete="given-name" placeholder="Rohan">
+            <div class="err">First name is required.</div>
+          </div>
+          <div class="field" data-f="lastName">
+            <label>Last name <span class="req">*</span></label>
+            <input class="control" name="lastName" autocomplete="family-name" placeholder="Deshmukh">
+            <div class="err">Last name is required.</div>
+          </div>
+          <div class="field" data-f="company">
+            <label>Company</label>
+            <input class="control" name="company" autocomplete="organization" placeholder="Company name">
+          </div>
+          <div class="field" data-f="title">
+            <label>Job title</label>
+            <input class="control" name="title" placeholder="Head of Procurement">
+          </div>
+          <div class="field" data-f="email">
+            <label>Email <span class="req">*</span></label>
+            <input class="control" type="email" name="email" inputmode="email" placeholder="name@company.com">
+            <div class="err">Enter a valid email.</div>
+          </div>
+          <div class="field" data-f="phone">
+            <label>Phone <span class="req">*</span></label>
+            <input class="control" type="tel" name="phone" inputmode="tel" placeholder="+91 98xxx xxxxx">
+            <div class="err">Phone is required.</div>
+          </div>
+          <div class="field" data-f="website">
+            <label>Website</label>
+            <input class="control" name="website" inputmode="url" placeholder="company.com">
+          </div>
+          <div class="field" data-f="leadSource">
+            <label>Lead source</label>
+            <select class="control" name="leadSource">
+              <option>Business card scan</option>
+              <option>Trade show</option>
+              <option>Referral</option>
+            </select>
+          </div>
+          <div class="field full" data-f="notes">
+            <label>Notes</label>
+            <textarea class="control" name="notes" rows="3" placeholder="Where you met, what was discussed"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:24px;flex-wrap:wrap">
+          <button type="submit" class="btn btn-primary" style="flex:1;min-width:190px" id="saveBtn">
+            <i class="ph-bold ph-cloud-arrow-up"></i> Save to Salesforce
+          </button>
+          <button type="button" class="btn btn-ghost" id="backBtn"><i class="ph-bold ph-arrow-left"></i> Back</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="wstep" data-wstep="3" hidden>
+      <div class="done-wrap">
+        <div class="done-ic"><i class="ph-bold ph-check"></i></div>
+        <h2>Saved to Salesforce</h2>
+        <p>The lead was created and assigned to your queue.</p>
+        <div class="done-summary" id="doneSummary"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+          <button class="btn btn-primary" id="againBtn"><i class="ph-bold ph-plus"></i> Scan another card</button>
+          <button class="btn btn-ghost" data-nav="contacts">View contacts</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACTS ============ -->
+  <section class="view" data-view="contacts">
+    <h1 class="title">Contacts</h1>
+    <p class="sub">Every card you scanned, with its Salesforce status.</p>
+    <div class="searchbar">
+      <i class="ph-bold ph-magnifying-glass"></i>
+      <input id="searchInput" placeholder="Search name or company" autocomplete="off">
+    </div>
+    <div class="cgrid" id="contactList"></div>
+  </section>
+
+  <!-- ============ ADMIN ============ -->
+  <section class="view" data-view="admin">
+    <h1 class="title">Admin</h1>
+    <p class="sub">Team activity, sync health and the Salesforce connection.</p>
+
+    <div class="admin-wrap">
+      <div class="admin-side" id="adminTabs">
+        <button class="on" data-atab="dash"><i class="ph-bold ph-gauge"></i> Overview</button>
+        <button data-atab="records"><i class="ph-bold ph-rows"></i> Records</button>
+        <button data-atab="users"><i class="ph-bold ph-users-three"></i> Team</button>
+        <button data-atab="sf"><i class="ph-bold ph-plugs-connected"></i> Salesforce</button>
+      </div>
+
+      <div>
+        <div class="atab" data-apane="dash">
+          <div class="stats">
+            <div class="stat"><div class="k">Total scans</div><div class="v" id="stScans">0</div><div class="d up">+12% this week</div></div>
+            <div class="stat"><div class="k">Synced</div><div class="v" id="stSynced">0</div><div class="d up">98.2% success</div></div>
+            <div class="stat"><div class="k">Pending</div><div class="v" id="stPending">0</div><div class="d">In queue</div></div>
+            <div class="stat"><div class="k">Failed</div><div class="v" id="stFailed">0</div><div class="d dn" id="stFailedNote">Needs retry</div></div>
+          </div>
+          <div class="chartbox">
+            <h3>Scans per day</h3>
+            <div class="bars" id="bars"></div>
+          </div>
+          <div class="chartbox">
+            <h3>Recent activity</h3>
+            <div id="activityList"></div>
+          </div>
+        </div>
+
+        <div class="atab" data-apane="records" hidden>
+          <div class="tblbox">
+            <table>
+              <thead><tr><th>Contact</th><th>Company</th><th>Scanned by</th><th>Status</th><th>Date</th><th></th></tr></thead>
+              <tbody id="recordsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="atab" data-apane="users" hidden>
+          <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+            <button class="btn btn-primary" style="min-height:44px;padding:10px 20px" id="inviteBtn"><i class="ph-bold ph-user-plus"></i> Invite member</button>
+          </div>
+          <div class="tblbox">
+            <table>
+              <thead><tr><th>Member</th><th>Role</th><th>Scans</th><th>Last active</th><th></th></tr></thead>
+              <tbody id="usersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="atab" data-apane="sf" hidden>
+          <div class="sfbox">
+            <div class="sf-logo"><i class="ph-fill ph-cloud"></i></div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <strong style="font-size:15px">Salesforce connection</strong>
+                <span class="chip chip-ok"><i class="ph-fill ph-check-circle"></i> Connected</span>
+              </div>
+              <p style="font-size:13px;color:var(--text-2);margin-top:5px">Org: thinkvibes.my.salesforce.com. Scans create Leads, assigned round robin.</p>
+              <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+                <button class="btn btn-ghost" style="min-height:40px;padding:8px 16px" onclick="toast('Connection test passed')"><i class="ph-bold ph-plugs-connected"></i> Test</button>
+                <button class="btn btn-ghost" style="min-height:40px;padding:8px 16px" onclick="toast('Sync queue flushed')"><i class="ph-bold ph-arrows-clockwise"></i> Sync now</button>
+              </div>
+            </div>
+          </div>
+          <div class="chartbox" style="margin-bottom:0">
+            <h3>Field mapping</h3>
+            <div class="maprow"><span class="src">First / Last name</span><span class="dst">Lead.FirstName / LastName</span></div>
+            <div class="maprow"><span class="src">Company</span><span class="dst">Lead.Company</span></div>
+            <div class="maprow"><span class="src">Email</span><span class="dst">Lead.Email</span></div>
+            <div class="maprow"><span class="src">Phone</span><span class="dst">Lead.Phone</span></div>
+            <div class="maprow"><span class="src">Job title</span><span class="dst">Lead.Title</span></div>
+            <div class="maprow"><span class="src">Notes</span><span class="dst">Lead.Description</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="tabbar">
+  <button data-nav="scan" class="on"><i class="ph-bold ph-scan"></i>Scanner</button>
+  <button data-nav="contacts"><i class="ph-bold ph-address-book"></i>Contacts</button>
+  <button data-nav="admin"><i class="ph-bold ph-gauge"></i>Admin</button>
+</nav>
+
+<div class="scan-overlay" id="scanOverlay">
+  <div class="scanbox">
+    <div class="pulse"><i class="ph-bold ph-scan"></i></div>
+    <div class="t">Reading the card</div>
+    <div class="s" id="scanStep">Detecting text regions</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="ph-fill ph-check-circle" id="toastIcon"></i><span id="toastMsg"></span></div>
+
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+const LS_KEY='snapcard-signal';
+const state={images:[],contacts:JSON.parse(localStorage.getItem(LS_KEY)||'null')||seed(),role:'rep'};
+function persist(){localStorage.setItem(LS_KEY,JSON.stringify(state.contacts));}
+function daysAgo(n){const d=new Date();d.setDate(d.getDate()-n);return d.toISOString();}
+function seed(){return[
+  {id:1,firstName:'Meera',lastName:'Kulkarni',company:'Trivedi Polymers',title:'Purchase Manager',email:'meera.k@trivedipolymers.in',phone:'+91 98220 41573',status:'synced',by:'Vaibhav Parmar',date:daysAgo(1)},
+  {id:2,firstName:'Arjun',lastName:'Nair',company:'Coastline Logistics',title:'Regional Head',email:'arjun.nair@coastlinelog.com',phone:'+91 90040 22817',status:'synced',by:'Sneha Rathod',date:daysAgo(2)},
+  {id:3,firstName:'Farhan',lastName:'Sheikh',company:'Meridian Tooling',title:'Director, Operations',email:'farhan@meridiantooling.co',phone:'+91 98191 77320',status:'pending',by:'Vaibhav Parmar',date:daysAgo(2)},
+  {id:4,firstName:'Kavita',lastName:'Bhonsle',company:'Anchor Fasteners',title:'Sales Lead',email:'kavita.b@anchorfast.in',phone:'+91 99675 10284',status:'failed',by:'Rahul Chavan',date:daysAgo(4)}
+];}
+
+/* nav */
+const views=document.querySelectorAll('.view');
+function nav(name){
+  views.forEach(v=>v.classList.toggle('active',v.dataset.view===name));
+  document.querySelectorAll('[data-nav]').forEach(b=>b.classList.toggle('on',b.dataset.nav===name));
+  if(name==='contacts')renderContacts();
+  if(name==='admin')renderAdmin();
+  window.scrollTo({top:0});
+}
+document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>nav(b.dataset.nav)));
+document.getElementById('roleChip').addEventListener('click',()=>{
+  state.role=state.role==='rep'?'admin':'rep';
+  roleName.textContent=state.role==='rep'?'Sales Rep':'Admin';
+  roleAvatar.textContent=state.role==='rep'?'VP':'AD';
+  toast(state.role==='admin'?'Admin view':'Sales rep view');
+});
+
+/* stepper */
+function setStep(n){
+  document.querySelectorAll('.wstep').forEach(w=>w.hidden=+w.dataset.wstep!==n);
+  document.querySelectorAll('.step').forEach(s=>{
+    const i=+s.dataset.step;
+    s.classList.toggle('on',i===n);
+    s.classList.toggle('done',i<n);
+    if(i<n)s.querySelector('.n').innerHTML='<i class="ph-bold ph-check"></i>';
+    else s.querySelector('.n').textContent=i;
+  });
+  window.scrollTo({top:0});
+}
+
+/* upload */
+const dropzone=document.getElementById('dropzone'),fileInput=document.getElementById('fileInput'),
+      thumbs=document.getElementById('thumbs'),scanBtn=document.getElementById('scanBtn');
+pickBtn.addEventListener('click',()=>fileInput.click());
+['dragover','dragenter'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.remove('drag');}));
+dropzone.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
+fileInput.addEventListener('change',()=>{addFiles(fileInput.files);fileInput.value='';});
+function addFiles(files){
+  for(const f of files){
+    if(!f.type.startsWith('image/'))continue;
+    if(state.images.length>=2){toast('Max 2 images per card','warning-circle');break;}
+    state.images.push({url:URL.createObjectURL(f),name:f.name});
+  }
+  renderThumbs();
+}
+function renderThumbs(){
+  thumbs.innerHTML=state.images.map((im,i)=>`<div class="thumb"><img src="${im.url}" alt="Card ${i+1}"><button class="rm" data-rm="${i}"><i class="ph-bold ph-x"></i></button></div>`).join('');
+  thumbs.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{state.images.splice(+b.dataset.rm,1);renderThumbs();}));
+  scanBtn.disabled=state.images.length===0;
+}
+
+/* camera */
+let camStream=null;
+camToggle.addEventListener('click',async()=>{
+  if(camStream){stopCam();return;}
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    camVideo.srcObject=camStream;await camVideo.play();camWrap.hidden=false;
+  }catch{toast('Camera unavailable. Use browse.','warning-circle');}
+});
+camShutter.addEventListener('click',()=>{
+  const c=document.createElement('canvas');c.width=camVideo.videoWidth;c.height=camVideo.videoHeight;
+  c.getContext('2d').drawImage(camVideo,0,0);
+  c.toBlob(b=>{addFiles([new File([b],'capture.jpg',{type:'image/jpeg'})]);toast('Captured');stopCam();});
+});
+function stopCam(){if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}camWrap.hidden=true;}
+
+/* scan sim */
+const steps=['Detecting text regions','Reading name and title','Reading contact details','Structuring fields'];
+scanBtn.addEventListener('click',async()=>{
+  scanOverlay.classList.add('show');
+  for(const s of steps){scanStep.textContent=s;await wait(500);}
+  scanOverlay.classList.remove('show');
+  const f=reviewForm.elements;
+  Object.entries({firstName:'Vaibhav',lastName:'Parmar',company:'ThinkVibes',title:'CEO',email:'vaibhav.parmar@thinkvibes.com',phone:'+91 98765 43210',website:'thinkvibes.com'})
+    .forEach(([k,v])=>{if(f[k])f[k].value=v;});
+  setStep(2);
+  toast('Card read. Review the details.');
+});
+function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+
+/* form */
+const form=document.getElementById('reviewForm');
+backBtn.addEventListener('click',()=>setStep(1));
+form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  let ok=true;
+  const need={firstName:v=>v.trim(),lastName:v=>v.trim(),email:v=>/^\S+@\S+\.\S+$/.test(v),phone:v=>v.trim()};
+  for(const[n,t]of Object.entries(need)){
+    const fl=form.querySelector(`[data-f="${n}"]`),bad=!t(form.elements[n].value);
+    fl.classList.toggle('invalid',bad);if(bad)ok=false;
+  }
+  if(!ok){toast('Fix the highlighted fields','warning-circle');return;}
+  saveBtn.disabled=true;
+  saveBtn.innerHTML='<i class="ph-bold ph-circle-notch" style="animation:rot 1s linear infinite"></i> Saving';
+  await wait(1300);
+  const f=form.elements;
+  const rec={id:Date.now(),firstName:f.firstName.value.trim(),lastName:f.lastName.value.trim(),company:f.company.value.trim(),title:f.title.value.trim(),email:f.email.value.trim(),phone:f.phone.value.trim(),status:'synced',by:'Vaibhav Parmar',date:new Date().toISOString()};
+  state.contacts.unshift(rec);persist();
+  doneSummary.innerHTML=[
+    ['Name',`${rec.firstName} ${rec.lastName}`],['Company',rec.company||'-'],
+    ['Email',rec.email],['Phone',rec.phone],['Salesforce','Lead created']
+  ].map(([k,v])=>`<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+  saveBtn.disabled=false;
+  saveBtn.innerHTML='<i class="ph-bold ph-cloud-arrow-up"></i> Save to Salesforce';
+  setStep(3);
+});
+againBtn.addEventListener('click',()=>{
+  form.reset();state.images=[];renderThumbs();
+  form.querySelectorAll('.invalid').forEach(x=>x.classList.remove('invalid'));
+  setStep(1);
+});
+const st=document.createElement('style');st.textContent='@keyframes rot{to{transform:rotate(360deg)}}';document.head.appendChild(st);
+
+/* contacts */
+const AV=[['#fff0e8','#c2410c'],['#f0fdf4','#15803d'],['#eef2ff','#4338ca'],['#fdf2f8','#be185d']];
+function chipFor(s){
+  if(s==='synced')return'<span class="chip chip-ok"><i class="ph-fill ph-check-circle"></i> Synced</span>';
+  if(s==='pending')return'<span class="chip chip-warn"><i class="ph-fill ph-clock"></i> Pending</span>';
+  return'<span class="chip chip-bad"><i class="ph-fill ph-warning-circle"></i> Failed</span>';
+}
+function fmtDate(iso){
+  const d=new Date(iso),diff=Math.floor((Date.now()-d)/864e5);
+  if(diff===0)return'Today';if(diff===1)return'Yesterday';
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+function renderContacts(){
+  const q=(searchInput.value||'').toLowerCase();
+  const list=state.contacts.filter(c=>(`${c.firstName} ${c.lastName} ${c.company}`).toLowerCase().includes(q));
+  if(!list.length){
+    contactList.innerHTML=`<div class="empty"><i class="ph-duotone ph-address-book"></i><div class="t">${q?'No matches':'No contacts yet'}</div><p>${q?'Try another search.':'Scan your first card to see it here.'}</p></div>`;
+    return;
+  }
+  contactList.innerHTML=list.map((c,i)=>{
+    const[bg,fg]=AV[i%AV.length];
+    return`<div class="ccard">
+      <div class="top">
+        <div class="avatar" style="background:${bg};color:${fg}">${c.firstName[0]}${c.lastName[0]}</div>
+        <div><div class="name">${c.firstName} ${c.lastName}</div><div class="role">${c.title||''}${c.title&&c.company?' · ':''}${c.company||''}</div></div>
+      </div>
+      <div class="line"><i class="ph-bold ph-envelope-simple"></i><span>${c.email}</span></div>
+      <div class="line"><i class="ph-bold ph-phone"></i><span>${c.phone}</span></div>
+      <div class="foot"><span class="when">${fmtDate(c.date)}</span>${chipFor(c.status)}</div>
+    </div>`;
+  }).join('');
+}
+searchInput.addEventListener('input',renderContacts);
+
+/* admin */
+adminTabs.addEventListener('click',e=>{
+  const b=e.target.closest('[data-atab]');if(!b)return;
+  document.querySelectorAll('[data-atab]').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.atab').forEach(p=>p.hidden=p.dataset.apane!==b.dataset.atab);
+});
+const TEAM=[
+  {name:'Vaibhav Parmar',email:'vaibhav.parmar@thinkvibes.com',role:'Admin',scans:34,active:'2 min ago'},
+  {name:'Sneha Rathod',email:'sneha.r@thinkvibes.com',role:'Sales Rep',scans:27,active:'1 hr ago'},
+  {name:'Rahul Chavan',email:'rahul.c@thinkvibes.com',role:'Sales Rep',scans:19,active:'Yesterday'},
+  {name:'Divya Menon',email:'divya.m@thinkvibes.com',role:'Manager',scans:11,active:'3 days ago'}
+];
+function renderAdmin(){
+  const c=state.contacts;
+  stScans.textContent=c.length;
+  stSynced.textContent=c.filter(x=>x.status==='synced').length;
+  stPending.textContent=c.filter(x=>x.status==='pending').length;
+  const failed=c.filter(x=>x.status==='failed').length;
+  stFailed.textContent=failed;
+  stFailedNote.textContent=failed?'Needs retry':'All clear';
+  const data=[3,5,2,7,4,6,Math.max(1,Math.min(c.length,9))],labels=['Fri','Sat','Sun','Mon','Tue','Wed','Today'],max=Math.max(...data);
+  bars.innerHTML=data.map((v,i)=>`<div class="b"><div class="fill ${i===6?'hot':''}" style="height:${Math.round(v/max*100)}%"></div><div class="lbl">${labels[i]}</div></div>`).join('');
+  activityList.innerHTML=c.slice(0,4).map(x=>`<div class="actline"><span>${x.by} scanned <strong>${x.firstName} ${x.lastName}</strong></span><span class="when">${fmtDate(x.date)}</span></div>`).join('')||'<p style="font-size:13px;color:var(--text-2)">No activity yet.</p>';
+  recordsBody.innerHTML=c.map(x=>`<tr>
+    <td><div class="tname">${x.firstName} ${x.lastName}</div><div class="tsub">${x.email}</div></td>
+    <td>${x.company||'-'}</td><td>${x.by}</td><td>${chipFor(x.status)}</td><td>${fmtDate(x.date)}</td>
+    <td style="text-align:right;white-space:nowrap">
+      ${x.status==='failed'?`<button class="icon-btn" data-retry="${x.id}" title="Retry"><i class="ph-bold ph-arrow-clockwise"></i></button> `:''}
+      <button class="icon-btn" data-del="${x.id}" title="Delete"><i class="ph-bold ph-trash"></i></button>
+    </td></tr>`).join('');
+  document.querySelectorAll('[data-retry]').forEach(b=>b.addEventListener('click',()=>{
+    const r=state.contacts.find(x=>x.id==b.dataset.retry);
+    if(r){r.status='synced';persist();renderAdmin();toast('Synced to Salesforce');}
+  }));
+  document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
+    state.contacts=state.contacts.filter(x=>x.id!=b.dataset.del);persist();renderAdmin();toast('Record deleted');
+  }));
+  usersBody.innerHTML=TEAM.map((u,i)=>{
+    const[bg,fg]=AV[i%AV.length];
+    return`<tr>
+      <td><div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:11.5px;background:${bg};color:${fg}">${u.name.split(' ').map(w=>w[0]).join('')}</div>
+        <div><div class="tname">${u.name}</div><div class="tsub">${u.email}</div></div>
+      </div></td>
+      <td>${u.role}</td><td class="mono">${u.scans}</td><td>${u.active}</td>
+      <td style="text-align:right"><button class="icon-btn" onclick="toast('Member settings (prototype)')"><i class="ph-bold ph-dots-three"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+inviteBtn.addEventListener('click',()=>toast('Invite sent (prototype)'));
+
+/* toast */
+let toastTimer;
+function toast(msg,icon='check-circle'){
+  toastMsg.textContent=msg;
+  toastIcon.className=`ph-fill ph-${icon}`;
+  const t=document.getElementById('toast');
+  t.classList.add('show');clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+renderThumbs();
+</script>
+</body>
+</html>

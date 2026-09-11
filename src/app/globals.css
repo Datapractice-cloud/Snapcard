@@ -1,0 +1,131 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Theme: "Cobalt" — see the Design section in CLAUDE.md.
+ * Tokens are lifted from snapcard-prototypes/layout-1.html `:root`.
+ * The app is light-only; the prototype has no dark variant.
+ */
+
+@theme inline {
+  /* shadcn semantic tokens */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Cobalt-specific tokens */
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-subtle: var(--subtle);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+
+  /* Cobalt radii: inputs 10, buttons 12, cards 14 */
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 22px;
+
+  --shadow-card: 0 1px 2px rgb(22 28 45 / 0.05), 0 4px 16px rgb(22 28 45 / 0.06);
+  --shadow-brand: 0 2px 8px rgb(29 78 216 / 0.28);
+  --shadow-toast: 0 8px 30px rgb(22 28 45 / 0.3);
+
+  --font-sans: var(--font-manrope);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-heading: var(--font-manrope);
+}
+
+:root {
+  color-scheme: light;
+
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --surface-2: #f0f2f5;
+  --line: #e4e7ec;
+  --line-strong: #d0d5dd;
+  --text: #16181d;
+  --text-2: #5b6472;
+  --subtle: #8b93a1;
+  --brand: #1d4ed8;
+  --brand-strong: #1e40af;
+  --brand-soft: #eff4ff;
+  --ok: #047857;
+  --ok-soft: #ecfdf5;
+  --warn: #b45309;
+  --warn-soft: #fffbeb;
+  --bad: #b91c1c;
+  --bad-soft: #fef2f2;
+
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --primary: var(--brand);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--text);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--text-2);
+  --accent: var(--brand-soft);
+  --accent-foreground: var(--brand-strong);
+  --destructive: var(--bad);
+  --border: var(--line);
+  --input: var(--line-strong);
+  --ring: var(--brand);
+  --radius: 14px;
+
+  /* Height of the mobile tab bar / offset of the desktop sidebar. */
+  --nav-h: 64px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100dvh;
+  }
+  /* Cobalt headings: weight 800, tight tracking. */
+  h1,
+  h2,
+  h3 {
+    @apply font-extrabold tracking-tight;
+  }
+}
