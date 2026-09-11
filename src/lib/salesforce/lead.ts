@@ -6,6 +6,7 @@ import {
   errorCodeOf,
   findDuplicateId,
   sfFetch,
+  soql,
 } from "./client";
 
 /**
@@ -163,4 +164,67 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /** Enough for an admin to act on, short enough to store on the lead. */
 function shortMessage(error: unknown): string {
   return (error instanceof Error ? error.message : String(error)).slice(0, 500);
+}
+
+/** One row of the admin table. */
+export type EventLead = {
+  id: string;
+  name: string;
+  company: string;
+  title: string;
+  email: string;
+  phone: string;
+  createdAt: string;
+};
+
+export type EventLeadsResult =
+  | { ok: true; leads: EventLead[]; capped: boolean }
+  | { ok: false; error: string };
+
+/** The admin table shows the most recent this many. */
+const ADMIN_LIMIT = 200;
+
+/*
+ * Today's event leads. Constant query, no interpolation.
+ *
+ * Filtered on LeadSource rather than a custom event field: the app no longer
+ * writes one (see the Salesforce contract in CLAUDE.md). CreatedDate = TODAY is
+ * evaluated in the org's timezone, which is the one the admin is thinking in.
+ */
+const TODAYS_LEADS_SOQL = `SELECT Id, Name, Company, Email, Phone, Title, CreatedDate FROM Lead WHERE LeadSource = 'Event' AND CreatedDate = TODAY ORDER BY CreatedDate DESC LIMIT ${ADMIN_LIMIT}`;
+
+type LeadRecord = {
+  Id: string;
+  Name: string | null;
+  Company: string | null;
+  Email: string | null;
+  Phone: string | null;
+  Title: string | null;
+  CreatedDate: string;
+};
+
+/**
+ * Returns a result rather than throwing: a Salesforce outage should give the
+ * admin a page explaining that, not a 500.
+ */
+export async function listTodaysEventLeads(): Promise<EventLeadsResult> {
+  try {
+    const { records } = await soql<LeadRecord>(TODAYS_LEADS_SOQL);
+
+    return {
+      ok: true,
+      capped: records.length >= ADMIN_LIMIT,
+      leads: records.map((record) => ({
+        id: record.Id,
+        name: record.Name ?? "",
+        company: record.Company ?? "",
+        title: record.Title ?? "",
+        email: record.Email ?? "",
+        phone: record.Phone ?? "",
+        createdAt: record.CreatedDate,
+      })),
+    };
+  } catch (error) {
+    return { ok: false, error: shortMessage(error) };
+  }
 }

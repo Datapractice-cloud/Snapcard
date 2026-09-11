@@ -117,6 +117,25 @@ async function authorisedFetch(path: string, init: RequestInit): Promise<Respons
   }
 }
 
+/**
+ * Runs a SOQL query.
+ *
+ * Every query in this app is a constant — nothing a rep or an admin types
+ * reaches SOQL. If that ever changes, bind values rather than interpolating
+ * them: SOQL injection is as real as SQL injection and Salesforce has no
+ * parameterised query API over REST.
+ */
+export async function soql<T>(query: string): Promise<{ records: T[]; totalSize: number; done: boolean }> {
+  const response = await sfFetch(`/query?q=${encodeURIComponent(query)}`);
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => undefined);
+    throw new Error(describeError(response.status, body));
+  }
+
+  return (await response.json()) as { records: T[]; totalSize: number; done: boolean };
+}
+
 /** Salesforce returns errors as an array of these. */
 type SalesforceError = {
   errorCode?: string;
