@@ -59,7 +59,7 @@ const envShape = z.object({
   NEXT_PUBLIC_APP_URL: z.url({ message: "NEXT_PUBLIC_APP_URL must be an absolute URL" }),
 
   GEMINI_API_KEY: nonEmpty("GEMINI_API_KEY"),
-  GEMINI_MODEL: nonEmpty("GEMINI_MODEL").default("gemini-3.5-flash-lite"),
+  GEMINI_MODEL: nonEmpty("GEMINI_MODEL").default("gemini-3.5-flash"),
 
   SF_LOGIN_URL: z
     .url({ message: "SF_LOGIN_URL must be the org My Domain URL, e.g. https://acme.my.salesforce.com" })
