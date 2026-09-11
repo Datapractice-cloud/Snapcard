@@ -12,7 +12,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "sf:smoke": "node --env-file=.env.local --import tsx scripts/sf-smoke.ts"
   },
   "dependencies": {
     "@google/genai": "^2.22.0",
