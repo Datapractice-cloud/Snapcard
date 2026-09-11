@@ -228,3 +228,59 @@ export async function listTodaysEventLeads(): Promise<EventLeadsResult> {
     return { ok: false, error: shortMessage(error) };
   }
 }
+
+/** The Lead fields SnapCard writes, as Salesforce names them. */
+export const REQUIRED_LEAD_FIELDS = [
+  "SnapCard_Client_Id__c",
+  "FirstName",
+  "LastName",
+  "Company",
+  "Title",
+  "Email",
+  "Phone",
+  "Website",
+  "Street",
+  "City",
+  "State",
+  "PostalCode",
+  "Country",
+  "Description",
+  "LeadSource",
+] as const;
+
+export type FieldCheck = {
+  name: string;
+  /** Absent from describe: either it does not exist, or field-level security hides it. */
+  missing: boolean;
+  writable: boolean;
+};
+
+/**
+ * Asks Salesforce which of the fields we write the integration user can
+ * actually see and set.
+ *
+ * Describe respects field-level security, so a field the user has no access to
+ * simply does not come back — which is indistinguishable from one that was
+ * never created. Both are fixed in Setup, and both otherwise show up as a
+ * needs_review lead at an event with no clue as to why.
+ */
+export async function checkLeadFieldAccess(): Promise<FieldCheck[]> {
+  const response = await sfFetch("/sobjects/Lead/describe");
+  if (!response.ok) {
+    throw new Error(`Could not describe Lead: ${errorCodeOf(await readJson(response))}`);
+  }
+
+  const body = (await response.json()) as {
+    fields: { name: string; createable?: boolean; updateable?: boolean }[];
+  };
+  const byName = new Map(body.fields.map((field) => [field.name.toLowerCase(), field]));
+
+  return REQUIRED_LEAD_FIELDS.map((name) => {
+    const field = byName.get(name.toLowerCase());
+    return {
+      name,
+      missing: !field,
+      writable: Boolean(field?.createable && field?.updateable),
+    };
+  });
+}

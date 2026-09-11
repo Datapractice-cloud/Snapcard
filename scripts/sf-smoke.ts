@@ -11,7 +11,7 @@
  */
 import { randomUUID } from "node:crypto";
 import { sfFetch } from "../src/lib/salesforce/client";
-import { attachImage, upsertLead } from "../src/lib/salesforce/lead";
+import { attachImage, checkLeadFieldAccess, upsertLead } from "../src/lib/salesforce/lead";
 import { leadSubmitSchema } from "../src/lib/schemas";
 
 const full = process.argv.includes("--full");
@@ -50,6 +50,34 @@ async function deleteLead(leadId: string) {
 
 async function main() {
   console.log(`clientId: ${clientId}`);
+
+  /*
+   * Checked first, because a field the integration user cannot see fails the
+   * upsert with NOT_FOUND or INVALID_FIELD and no hint as to which field or
+   * why. Describe respects field-level security, so "missing" here means
+   * either the field was never created or the profile hides it — both are
+   * fixed in Setup, and both are worth knowing before an event rather than
+   * during one.
+   */
+  step("Field access (SETUP.md §2)");
+  const access = await checkLeadFieldAccess();
+  const blocked = access.filter((field) => field.missing || !field.writable);
+
+  for (const field of access) {
+    const state = field.missing ? "MISSING or hidden" : field.writable ? "ok" : "read only";
+    console.log(`  ${field.name.padEnd(24)} ${state}`);
+  }
+
+  if (blocked.length > 0) {
+    const names = blocked.map((field) => field.name).join(", ");
+    throw new Error(
+      [
+        `The integration user cannot write ${blocked.length} field(s): ${names}.`,
+        "  Create SnapCard_Client_Id__c if it is absent, then give the integration user's",
+        "  profile or permission set field-level access to every field listed above.",
+      ].join("\n"),
+    );
+  }
 
   step("First upsert (expect a new Lead)");
   const first = await upsertLead(submit);
