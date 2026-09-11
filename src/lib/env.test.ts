@@ -17,7 +17,7 @@ describe("parseEnv", () => {
   it("accepts a complete environment and applies defaults", () => {
     const env = parseEnv(complete);
     expect(env.ALLOWED_EMAIL_DOMAIN).toBe("thinkvibes.com");
-    expect(env.GEMINI_MODEL).toBe("gemini-2.5-flash-lite");
+    expect(env.GEMINI_MODEL).toBe("gemini-3.5-flash-lite");
     expect(env.SF_API_VERSION).toBe("v60.0");
     expect(env.MONGODB_DB).toBe("snapcard");
   });
@@ -32,7 +32,7 @@ describe("parseEnv", () => {
     const env = parseEnv({ ...complete, SYNC_SECRET: "", MONGODB_URI: "  ", GEMINI_MODEL: "" });
     expect(env.SYNC_SECRET).toBeUndefined();
     expect(env.MONGODB_URI).toBeUndefined();
-    expect(env.GEMINI_MODEL).toBe("gemini-2.5-flash-lite");
+    expect(env.GEMINI_MODEL).toBe("gemini-3.5-flash-lite");
   });
 
   it("defaults AUTH_TRUST_HOST on, because the app runs behind a proxy", () => {

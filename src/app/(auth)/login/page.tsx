@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
-import { Cards, GoogleLogo, LockSimple, WarningCircle } from "@phosphor-icons/react/dist/ssr";
+import { Cards } from "@phosphor-icons/react/dist/ssr/Cards";
+import { GoogleLogo } from "@phosphor-icons/react/dist/ssr/GoogleLogo";
+import { LockSimple } from "@phosphor-icons/react/dist/ssr/LockSimple";
+import { WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import { signInWithGoogle } from "@/app/auth-actions";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";

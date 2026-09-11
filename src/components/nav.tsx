@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AddressBook, Gauge, Scan, type Icon } from "@phosphor-icons/react";
+// Deep imports, not the barrel: `@phosphor-icons/react` re-exports ~9000
+// icons, and in dev that lands every one of them in the browser. The type-only
+// import is erased at compile time, so it costs nothing.
+import type { Icon } from "@phosphor-icons/react";
+import { AddressBook } from "@phosphor-icons/react/dist/csr/AddressBook";
+import { Gauge } from "@phosphor-icons/react/dist/csr/Gauge";
+import { Scan } from "@phosphor-icons/react/dist/csr/Scan";
 import { cn } from "@/lib/utils";
 
 type NavItem = {

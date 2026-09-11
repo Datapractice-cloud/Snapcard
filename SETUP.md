@@ -95,7 +95,7 @@ are wrong.
 | `ADMIN_EMAILS` | no | no | Comma-separated. These users see `/admin`. |
 | `NEXT_PUBLIC_APP_URL` | **yes** | no | `https://scan.thinkvibes.com` |
 | `GEMINI_API_KEY` | no | **yes** | Google AI Studio key |
-| `GEMINI_MODEL` | no | no | `gemini-2.5-flash-lite` |
+| `GEMINI_MODEL` | no | no | `gemini-3.5-flash-lite` — the 2.5 family is retired for new keys |
 | `SF_LOGIN_URL` | no | no | The org My Domain URL **with** `https://`, not `login.salesforce.com` |
 | `SF_CLIENT_ID` | no | no | Connected App consumer key |
 | `SF_CLIENT_SECRET` | no | **yes** | Connected App consumer secret |

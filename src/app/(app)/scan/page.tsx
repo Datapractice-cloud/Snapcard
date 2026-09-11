@@ -1,16 +1,14 @@
 import { PageHeader } from "@/components/page-header";
-import { Card } from "@/components/ui/card";
+import { ScanFlow } from "@/components/scan/scan-flow";
 
 export default function ScanPage() {
   return (
     <>
       <PageHeader
         title="Scan a business card"
-        subtitle="Take a photo or pick one from your gallery. We read the card and pre-fill the contact for review."
+        subtitle="Take a photo of the card. We read it and fill in the contact for you to check."
       />
-      <Card className="p-5 text-sm text-muted-foreground">
-        Capture, review and save arrive in Tasks 8 and 9.
-      </Card>
+      <ScanFlow />
     </>
   );
 }

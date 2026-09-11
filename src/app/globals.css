@@ -131,6 +131,11 @@
     line-height: 1.5;
     min-height: 100dvh;
   }
+  /* Cobalt's `.mono`: JetBrains Mono for numerics and raw card text. */
+  .mono {
+    font-family: var(--font-mono);
+  }
+
   /* Cobalt headings: weight 800, tight tracking. */
   h1,
   h2,

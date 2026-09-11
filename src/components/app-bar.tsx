@@ -1,4 +1,4 @@
-import { Cards } from "@phosphor-icons/react/dist/ssr";
+import { Cards } from "@phosphor-icons/react/dist/ssr/Cards";
 import { UserChip } from "@/components/user-chip";
 import { initialsFor } from "@/lib/initials";
 import type { Role } from "@/lib/auth-rules";

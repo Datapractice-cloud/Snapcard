@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SignOut } from "@phosphor-icons/react";
+import { SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
