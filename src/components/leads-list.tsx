@@ -8,7 +8,7 @@ import { MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusChip } from "@/components/lead-status";
-import { LeadDetailSheet } from "@/components/lead-detail-sheet";
+import { LeadDetailSheet, type LocalLead } from "@/components/lead-detail-sheet";
 import { outboxDb, processOutbox } from "@/lib/client/outbox";
 import { initialsFor } from "@/lib/initials";
 import type { HistoryItem } from "@/lib/client/outbox";
@@ -25,7 +25,7 @@ const AVATAR_TONES = [
 export function LeadsList() {
   const [query, setQuery] = useState("");
   const [syncing, setSyncing] = useState(false);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<{ clientId: string; local: LocalLead } | null>(null);
 
   const leads = useLiveQuery(
     () => outboxDb().history.orderBy("createdAt").reverse().limit(200).toArray(),
@@ -88,7 +88,18 @@ export function LeadsList() {
             <li key={lead.clientId}>
               <button
                 type="button"
-                onClick={() => setOpen(lead.clientId)}
+                onClick={() =>
+                  setOpen({
+                    clientId: lead.clientId,
+                    // Handed over so the sheet can still show the lead if the
+                    // server has no record of it.
+                    local: {
+                      fields: lead.fields,
+                      createdAt: lead.createdAt,
+                      salesforce: lead.salesforce,
+                    },
+                  })
+                }
                 className="flex w-full items-center gap-[13px] rounded-[14px] border border-line bg-surface px-4 py-[15px] text-left shadow-card hover:bg-surface-2"
               >
               <span
@@ -116,7 +127,11 @@ export function LeadsList() {
         </ul>
       )}
 
-      <LeadDetailSheet clientId={open} onClose={() => setOpen(null)} />
+      <LeadDetailSheet
+        clientId={open?.clientId ?? null}
+        fallback={open?.local ?? null}
+        onClose={() => setOpen(null)}
+      />
     </div>
   );
 }
