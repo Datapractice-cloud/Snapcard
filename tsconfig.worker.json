@@ -1,0 +1,16 @@
+// The service worker has no DOM. Checked separately by `npm run typecheck`.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "esnext",
+      "webworker"
+    ],
+    "types": [],
+    "noEmit": true
+  },
+  "include": [
+    "src/app/sw.ts"
+  ],
+  "exclude": []
+}

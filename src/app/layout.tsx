@@ -20,6 +20,15 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "SnapCard",
   description: "Scan a business card, review it, and create the lead in Salesforce.",
+  applicationName: "SnapCard",
+  // Standalone on iOS, and the title used under the home-screen icon.
+  appleWebApp: { capable: true, title: "SnapCard", statusBarStyle: "default" },
+  icons: {
+    icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  // Phone numbers on a card are data, not links to dial.
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {

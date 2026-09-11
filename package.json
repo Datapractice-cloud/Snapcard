@@ -10,10 +10,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "sf:smoke": "node --env-file=.env.local --import tsx scripts/sf-smoke.ts"
+    "sf:smoke": "node --env-file=.env.local --import tsx scripts/sf-smoke.ts",
+    "icons": "node --import tsx scripts/generate-icons.mts"
   },
   "dependencies": {
     "@google/genai": "^2.22.0",
@@ -37,12 +38,14 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@serwist/next": "^9.5.12",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.25",
+    "serwist": "^9.5.12",
     "shadcn": "^4.21.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.13",

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppBar } from "@/components/app-bar";
 import { SideNav, TabBar } from "@/components/nav";
+import { InstallPrompt } from "@/components/install-prompt";
 import { OutboxRunner } from "@/components/outbox-runner";
 import { auth } from "@/lib/auth";
 
@@ -26,6 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
         {/* Bottom padding clears the tab bar and the home indicator. */}
         <main className="mx-auto w-full max-w-[1180px] px-[18px] pt-5 pb-[calc(var(--nav-h)+32px+env(safe-area-inset-bottom))] desk:px-10 desk:pt-8 desk:pb-[60px]">
+          <InstallPrompt />
           {children}
         </main>
       </div>
