@@ -168,11 +168,24 @@ GEMINI_MODEL=gemini-3.5-flash
 SF_LOGIN_URL=https://<my-domain>.my.salesforce.com
 SF_CLIENT_ID=
 SF_CLIENT_SECRET=
+SALESFORCE_ENABLED=true
 SF_API_VERSION=v60.0
 SYNC_SECRET=                     # Phase 2
 MONGODB_URI=                     # Phase 2
 MONGODB_DB=snapcard              # Phase 2
 ```
+
+### Turning Salesforce off
+
+`SALESFORCE_ENABLED=false` skips the integration entirely: `upsertLead` returns
+`{ status: "skipped" }` without a network call, no images are attached, and the
+sync cron is a no-op. The **backup store then becomes the system of record**, so
+`MONGODB_URI` must be set — with both off, a lead exists only on the phone and
+the outbox correctly refuses to drop it.
+
+This is a switch, not a deletion. The mapping, upsert, error classification,
+retry and attachment logic all remain correct and tested for when the org is
+ready. It inverts priority 1 above for as long as it is set, and nothing else.
 
 ## Salesforce contract
 

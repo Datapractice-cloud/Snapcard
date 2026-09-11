@@ -93,6 +93,8 @@ export async function POST(request: Request) {
    */
   const leadId = salesforce.leadId ?? salesforce.duplicateOf;
 
+  // No Salesforce record to attach to when the integration is off; the images
+  // are already in the backup store.
   if ((salesforce.status === "synced" || salesforce.status === "duplicate") && leadId) {
     // Runs after the response is sent: the rep has their answer and is already
     // photographing the next card. A failed attachment is not worth waiting for.

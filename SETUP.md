@@ -96,6 +96,7 @@ are wrong.
 | `NEXT_PUBLIC_APP_URL` | **yes** | no | `https://scan.thinkvibes.com` |
 | `GEMINI_API_KEY` | no | **yes** | Google AI Studio key |
 | `GEMINI_MODEL` | no | no | `gemini-3.5-flash`. Not `flash-lite`: measured at 25-33s per card, past the route timeout. |
+| `SALESFORCE_ENABLED` | no | no | `true`. Set `false` to skip Salesforce entirely — the backup store then holds the leads, so `MONGODB_URI` becomes required. |
 | `SF_LOGIN_URL` | no | no | The org My Domain URL **with** `https://`, not `login.salesforce.com` |
 | `SF_CLIENT_ID` | no | no | Connected App consumer key |
 | `SF_CLIENT_SECRET` | no | **yes** | Connected App consumer secret |

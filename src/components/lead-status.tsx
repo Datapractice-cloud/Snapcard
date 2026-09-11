@@ -30,10 +30,21 @@ const QUEUED: Outcome = {
   chip: "Saved on phone",
   tone: "warn",
   headline: "Saved on phone",
-  detail: "It is safe here and will reach Salesforce on its own, even if you close the app.",
+  detail: "It is safe here and will sync on its own, even if you close the app.",
 };
 
 const OUTCOMES: Record<SalesforceResult["status"], Outcome> = {
+  /*
+   * Salesforce is switched off, so the backup store is the system of record.
+   * The rep is not told about an integration that is not running — from where
+   * they stand the lead is simply saved.
+   */
+  skipped: {
+    chip: "Saved",
+    tone: "ok",
+    headline: "Lead saved",
+    detail: "It is stored and ready to export.",
+  },
   synced: {
     chip: "In Salesforce",
     tone: "ok",
@@ -71,6 +82,7 @@ const TONE: Record<Tone, string> = {
 };
 
 const ICON = {
+  skipped: CheckCircle,
   synced: CheckCircle,
   duplicate: UsersThree,
   failed: ArrowsClockwise,

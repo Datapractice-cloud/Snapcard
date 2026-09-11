@@ -95,6 +95,31 @@ describe("nextAction — the outbox rules table", () => {
   });
 });
 
+describe("nextAction — Salesforce switched off", () => {
+  it("skipped + saved → delete, because the backup is the system of record", () => {
+    expect(nextAction({ attempts: 0 }, response("skipped", "saved"), NOW)).toEqual({
+      kind: "delete",
+      reason: "skipped",
+    });
+  });
+
+  it("skipped + backup failed → retry, because nothing holds the lead", () => {
+    expect(nextAction({ attempts: 0 }, response("skipped", "failed"), NOW)).toEqual({
+      kind: "retry",
+      attempts: 1,
+      nextAttemptAt: NOW + 30_000,
+    });
+  });
+
+  it("skipped + backup skipped → retry, since both stores are off", () => {
+    // A misconfiguration: the lead exists only on the phone, so the phone keeps
+    // it rather than quietly dropping it.
+    expect(nextAction({ attempts: 0 }, response("skipped", "skipped"), NOW)).toMatchObject({
+      kind: "retry",
+    });
+  });
+});
+
 describe("nextAction — no answer at all", () => {
   it("retries, because offline is indistinguishable from never received", () => {
     expect(nextAction({ attempts: 0 }, null, NOW)).toEqual({

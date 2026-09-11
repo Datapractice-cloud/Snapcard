@@ -16,7 +16,7 @@ export type OutboxItemState = {
 
 export type NextAction =
   /** The server holds it. Drop it from the queue. */
-  | { kind: "delete"; reason: "synced" | "duplicate" | "needs_review" | "server-will-retry" }
+  | { kind: "delete"; reason: "synced" | "duplicate" | "needs_review" | "skipped" | "server-will-retry" }
   /**
    * Salesforce took it but the backup did not. Keep the item so the phone can
    * push it to /api/leads/backup, which never touches Salesforce (Phase 2).
@@ -61,6 +61,15 @@ export function nextAction(
    * admin.
    */
   if (salesforce === "needs_review") return { kind: "delete", reason: "needs_review" };
+
+  /*
+   * Salesforce is switched off, so the backup store is the system of record.
+   * Saved there means done; anything else means nothing holds the lead and the
+   * phone is still the only copy.
+   */
+  if (salesforce === "skipped") {
+    return backup === "saved" ? { kind: "delete", reason: "skipped" } : retry(item, now);
+  }
 
   if (salesforce === "synced" || salesforce === "duplicate") {
     // The lead is in Salesforce, which is the system of record. If the backup

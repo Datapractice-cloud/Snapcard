@@ -44,6 +44,11 @@ describe("parseEnv", () => {
     expect(() => parseEnv({ ...complete, AUTH_TRUST_HOST: "yes" })).toThrow(/AUTH_TRUST_HOST/);
   });
 
+  it("keeps Salesforce on unless explicitly disabled", () => {
+    expect(parseEnv(complete).SALESFORCE_ENABLED).toBe(true);
+    expect(parseEnv({ ...complete, SALESFORCE_ENABLED: "false" }).SALESFORCE_ENABLED).toBe(false);
+  });
+
   it("splits and lowercases ADMIN_EMAILS", () => {
     expect(parseEnv(complete).ADMIN_EMAILS).toEqual(["a@thinkvibes.com", "b@thinkvibes.com"]);
   });

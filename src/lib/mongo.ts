@@ -50,7 +50,7 @@ export type LeadDoc = {
   rawText: string;
   consent: { given: true; at: Date };
   salesforce: {
-    status: "synced" | "duplicate" | "failed" | "needs_review";
+    status: "synced" | "duplicate" | "failed" | "needs_review" | "skipped";
     leadId?: string;
     duplicateOf?: string;
     attempts: number;
@@ -80,4 +80,27 @@ export async function leadsCollection() {
 
 export async function leadImagesCollection() {
   return (await mongoDb()).collection<LeadImageDoc>("lead_images");
+}
+
+/** One row of the admin table, read from Atlas rather than Salesforce. */
+export async function listTodaysLeadsFromAtlas(limit = 200) {
+  const leads = await leadsCollection();
+  const since = new Date();
+  since.setHours(0, 0, 0, 0);
+
+  const docs = await leads
+    .find({ createdAt: { $gte: since } })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .toArray();
+
+  return docs.map((doc) => ({
+    id: doc.clientId,
+    name: [doc.fields.firstName, doc.fields.lastName].filter(Boolean).join(" "),
+    company: doc.fields.company ?? "",
+    title: doc.fields.title ?? "",
+    email: doc.fields.email ?? "",
+    phone: doc.fields.phone ?? "",
+    createdAt: doc.createdAt.toISOString(),
+  }));
 }

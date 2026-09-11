@@ -1,3 +1,4 @@
+import { env } from "../env";
 import type { CardSide, LeadSubmit, SalesforceResult } from "../schemas";
 import {
   SalesforceUnreachable,
@@ -61,6 +62,13 @@ const EXTERNAL_ID_PATH = "/sobjects/Lead/SnapCard_Client_Id__c";
 
 /** Creates or updates the Lead, keyed on the phone's clientId. */
 export async function upsertLead(submit: LeadSubmit): Promise<SalesforceResult> {
+  /*
+   * Short-circuited before any network call when the integration is off. Not a
+   * failure — nothing was attempted, so nothing is owed a retry, and the
+   * backup store is what holds the lead.
+   */
+  if (!env.SALESFORCE_ENABLED) return { status: "skipped" };
+
   const record = mapFields(submit);
   const path = `${EXTERNAL_ID_PATH}/${encodeURIComponent(submit.clientId)}`;
 

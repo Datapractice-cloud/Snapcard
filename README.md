@@ -38,6 +38,7 @@ message naming every variable that is missing or malformed.
 | `npm run test:watch` | vitest, watching |
 | `npm run icons` | Regenerate the PWA icons into `public/icons/` |
 | `npm run sf:smoke` | Upsert a test lead into Salesforce twice, then delete it |
+| `npm run mongo:indexes` | Create the Atlas indexes (once per environment) |
 
 The service worker is **disabled in development** — it fights HMR and caches
 the file you are editing. To exercise the PWA locally, run `npm run build &&

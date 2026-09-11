@@ -61,6 +61,18 @@ const envShape = z.object({
   GEMINI_API_KEY: nonEmpty("GEMINI_API_KEY"),
   GEMINI_MODEL: nonEmpty("GEMINI_MODEL").default("gemini-3.5-flash"),
 
+  /*
+   * Turn the whole Salesforce integration off. Leads are then stored only by
+   * the backup store, which must be configured — see /api/leads.
+   *
+   * A switch rather than deleted code: the org gets fixed, and the mapping,
+   * upsert, retry and attachment logic are all still correct when it is.
+   */
+  SALESFORCE_ENABLED: z
+    .enum(["true", "false"], { error: 'SALESFORCE_ENABLED must be "true" or "false"' })
+    .default("true")
+    .transform((value) => value === "true"),
+
   SF_LOGIN_URL: z
     .url({ message: "SF_LOGIN_URL must be the org My Domain URL, e.g. https://acme.my.salesforce.com" })
     // Trailing slashes break `${SF_LOGIN_URL}/services/...`.

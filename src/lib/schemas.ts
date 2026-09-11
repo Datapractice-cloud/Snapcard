@@ -148,7 +148,18 @@ export const scanResponseSchema = z.object({
 
 export type ScanResponse = z.infer<typeof scanResponseSchema>;
 
-export const salesforceStatusSchema = z.enum(["synced", "duplicate", "failed", "needs_review"]);
+/**
+ * `skipped` means the Salesforce integration is switched off, so no attempt was
+ * made. It is not a failure: with SALESFORCE_ENABLED=false the backup store is
+ * the system of record, and a lead that reached it is saved.
+ */
+export const salesforceStatusSchema = z.enum([
+  "synced",
+  "duplicate",
+  "failed",
+  "needs_review",
+  "skipped",
+]);
 export type SalesforceStatus = z.infer<typeof salesforceStatusSchema>;
 
 export const salesforceResultSchema = z.object({
