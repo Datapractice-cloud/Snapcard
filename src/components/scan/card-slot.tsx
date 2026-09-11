@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Camera } from "@phosphor-icons/react/dist/csr/Camera";
 import { ImageSquare } from "@phosphor-icons/react/dist/csr/ImageSquare";
 import { Spinner } from "@phosphor-icons/react/dist/csr/Spinner";
@@ -8,6 +8,7 @@ import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { Button } from "@/components/ui/button";
 import { formatBytes } from "@/lib/client/compress";
 import { cn } from "@/lib/utils";
+import { CameraSheet } from "./camera-sheet";
 import type { Shot } from "./types";
 
 type Props = {
@@ -24,16 +25,32 @@ type Props = {
  * One side of the card: Cobalt's dashed dropzone until a photo exists, then
  * the preview.
  *
- * Camera first and gallery second, because at a booth the rep is holding the
- * card. `capture="environment"` opens the rear camera straight away on
- * Android and iOS; the second input omits it so an existing photo can still be
- * chosen, which is also the only route on desktop.
+ * "Take photo" opens a live camera. On a phone it hands straight over to the
+ * OS camera app, which focuses and exposes a small card far better than a
+ * <video> element does; on a laptop there is no camera app to hand over to, so
+ * it opens the in-page viewfinder instead. Gallery is always available.
  */
 export function CardSlot({ label, hint, required, shot, busy, onPick, onClear }: Props) {
   const cameraId = useId();
   const galleryId = useId();
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
+  const [viewfinder, setViewfinder] = useState(false);
+
+  /*
+   * A touch device almost certainly has a camera app behind
+   * `capture="environment"`. A laptop does not — the same input just opens a
+   * file picker, which is what made "Take photo" look broken on desktop.
+   */
+  const [preferDeviceCamera, setPreferDeviceCamera] = useState(false);
+  useEffect(() => {
+    setPreferDeviceCamera(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
+
+  const takePhoto = useCallback(() => {
+    if (preferDeviceCamera) cameraRef.current?.click();
+    else setViewfinder(true);
+  }, [preferDeviceCamera]);
 
   function handle(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -65,7 +82,7 @@ export function CardSlot({ label, hint, required, shot, busy, onPick, onClear }:
               variant="outline"
               size="tap"
               className="flex-1"
-              onClick={() => cameraRef.current?.click()}
+              onClick={takePhoto}
               disabled={busy}
             >
               <Camera size={18} weight="bold" />
@@ -101,7 +118,7 @@ export function CardSlot({ label, hint, required, shot, busy, onPick, onClear }:
             type="button"
             size="tap"
             className="mt-4 w-full"
-            onClick={() => cameraRef.current?.click()}
+            onClick={takePhoto}
             disabled={busy}
           >
             <Camera size={18} weight="bold" />
@@ -130,6 +147,25 @@ export function CardSlot({ label, hint, required, shot, busy, onPick, onClear }:
         onChange={handle}
       />
       <input ref={galleryRef} id={galleryId} type="file" accept="image/*" hidden onChange={handle} />
+
+      {viewfinder && (
+        <CameraSheet
+          label={label}
+          onCapture={(file) => {
+            setViewfinder(false);
+            onPick(file);
+          }}
+          onClose={() => setViewfinder(false)}
+          onUseDeviceCamera={
+            preferDeviceCamera
+              ? () => {
+                  setViewfinder(false);
+                  cameraRef.current?.click();
+                }
+              : undefined
+          }
+        />
+      )}
     </div>
   );
 }
