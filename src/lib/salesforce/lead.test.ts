@@ -85,7 +85,6 @@ describe("mapFields", () => {
         title: "Head of Procurement",
         phone: "+1 (415) 555-0134",
         website: "acme.com",
-        linkedin: "https://linkedin.com/in/rohan",
         street: "12 MG Road",
         city: "Pune",
         state: "MH",
@@ -113,8 +112,8 @@ describe("mapFields", () => {
     ]);
   });
 
-  it("does not send a LinkedIn URL, consent, the rep or the event", () => {
-    const record = mapFields(submitWith({ linkedin: "https://linkedin.com/in/rohan" }));
+  it("does not send consent, the rep or the event", () => {
+    const record = mapFields(submitWith({}));
     expect(record).not.toHaveProperty("LinkedIn__c");
     expect(record).not.toHaveProperty("SnapCard_Consent_At__c");
     expect(record).not.toHaveProperty("SnapCard_Consent_Version__c");

@@ -11,7 +11,6 @@ function modelJson(overrides: Record<string, unknown> = {}) {
     email: "rohan@acme.com",
     phone: "+91 98765 43210",
     website: "acme.com",
-    linkedin: "",
     street: "12 MG Road",
     city: "Pune",
     state: "MH",

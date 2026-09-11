@@ -53,7 +53,7 @@ a thinkvibes account lands on `/scan`; `ADMIN_EMAILS` user sees `/admin`.
 
 ```ts
 LeadFields = { firstName, lastName, company, title, email, phone, website,
-               linkedin, street, city, state, postalCode, country }  // all strings, default ""
+               street, city, state, postalCode, country }  // all strings, default ""
 LeadSubmit = { clientId: uuid, fields: LeadFields, rawText: string,
                consent: { given: literal(true) },
                images: array({ side: "front"|"back", dataUrl: string }).min(1).max(2) }
@@ -74,9 +74,9 @@ Use `@google/genai` `generateContent` with
 `config: { responseMimeType: "application/json", responseSchema, temperature: 0 }`.
 The response schema mirrors `LeadFields` plus `rawText`, all strings.
 Prompt: business-card OCR; if two images, merge front/back; split name;
-address into street/city/state/postalCode/country; website excludes
-linkedin; linkedin URL into `linkedin`; empty string when absent; `rawText`
-is all visible text with line breaks.
+address into street/city/state/postalCode/country; `website` is the company
+site only — a LinkedIn URL is not a website and is not captured anywhere;
+empty string when absent; `rawText` is all visible text with line breaks.
 
 Route: `requireSession()` → rate limit 20/min per email (`src/lib/ratelimit.ts`,
 in-memory Map with sliding window) → parse multipart, accept `image/jpeg`
@@ -176,10 +176,30 @@ padding at the bottom (`env(safe-area-inset-bottom)`).
 ## Task 9 — Review and submit
 
 Review form with react-hook-form + zod (`LeadFields`), all fields editable,
-required ones marked, `rawText` in a collapsible textarea. Consent checkbox
+required ones marked. The fields are exactly:
+
+| Field | Required |
+|---|---|
+| First name | yes |
+| Last name | yes |
+| Company | no — defaults to `[Not provided]` on submit |
+| Email | see below |
+| Phone | see below |
+| Job title | no |
+| Website | no |
+| Address — street, city, state, postal code, country | no |
+| Description (raw card text), in a collapsible textarea | no |
+
+Email and phone follow the Task 3 rule: at least one of the two. If the org
+decides both are mandatory, change the rule in `schemas.ts` first — the form
+and the server share one schema and must not diverge.
+
+Consent checkbox
 with the exact text from a `CONSENT_TEXT` constant. "Save lead" is disabled
 until consent is ticked and the form is valid. Consent is a gate only — it is
 not sent to Salesforce.
+
+`rawText` maps to `Description` on the Lead.
 
 On submit:
 1. Build `LeadSubmit` with `clientId = crypto.randomUUID()`, images as

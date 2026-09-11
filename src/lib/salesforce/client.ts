@@ -96,6 +96,14 @@ async function authorisedFetch(path: string, init: RequestInit): Promise<Respons
   const { token, instanceUrl } = await getToken();
   const url = `${instanceUrl}/services/data/${env.SF_API_VERSION}${path}`;
 
+  /*
+   * Authorization and Content-Type are the only headers sent, on purpose.
+   * In particular there is no `Sforce-Auto-Assign: FALSE`, so Salesforce
+   * applies its default of TRUE and an active Lead Assignment Rule runs and
+   * routes the Lead to a real owner instead of leaving it on the integration
+   * user. See SETUP.md §2.5 — with rules active the integration user needs
+   * View All on Lead, or it loses sight of the records it just created.
+   */
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${token}`);
   if (init.body !== undefined && !headers.has("Content-Type")) {

@@ -40,7 +40,21 @@ for the event — they expire.
    "Block" with "Report" is what returns `DUPLICATES_DETECTED` with match
    records). If the rule is set to "Allow", duplicates will simply be
    created — tell the dev team which it is.
-5. Confirm any **validation rules** on Lead that could reject event data
+5. **Lead Assignment Rules**: the app does **not** send the
+   `Sforce-Auto-Assign` header, so Salesforce applies its default of TRUE and
+   any *active* Lead Assignment Rule will run on every upsert. Decide with the
+   admin which you want:
+   - **Rules active** (normal): leads are routed to real owners, not left on
+     the integration user. This is usually what you want, but it means the
+     integration user stops owning the records it just created — so give it
+     **View All** on Lead, or the `/admin` table and the Phase 2 reconcile job
+     will silently stop seeing leads once they are reassigned.
+   - **No rules**: every Lead stays owned by the integration user. Nothing
+     extra to configure.
+
+   Either way, check that no rule reassigns `LeadSource = 'Event'` to a queue
+   nobody watches during the event.
+6. Confirm any **validation rules** on Lead that could reject event data
    (e.g. required Industry). Either relax them for `LeadSource = 'Event'`
    or make the app collect that field.
 

@@ -49,7 +49,6 @@ export const leadFieldsSchema = z.object({
     .default("")
     .transform((value) => cleanPhone(value).slice(0, 40)),
   website: text(255),
-  linkedin: text(255),
   street: text(255),
   city: text(40),
   state: text(80),

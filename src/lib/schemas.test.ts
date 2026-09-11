@@ -84,6 +84,26 @@ describe("leadFieldsSchema", () => {
     expect(leadFieldsSchema.safeParse({}).success).toBe(true);
   });
 
+  it("holds exactly the fields the review form shows", () => {
+    // Pinned: the form, the Gemini response schema and the Salesforce mapping
+    // all derive from this list, so a field added here without a home in
+    // Salesforce would be edited by a rep and then silently dropped.
+    expect(Object.keys(EMPTY_LEAD_FIELDS).sort()).toEqual([
+      "city",
+      "company",
+      "country",
+      "email",
+      "firstName",
+      "lastName",
+      "phone",
+      "postalCode",
+      "state",
+      "street",
+      "title",
+      "website",
+    ]);
+  });
+
   it("truncates to the Salesforce limit instead of throwing away the scan", () => {
     const fields = leadFieldsSchema.parse({
       firstName: "a".repeat(60), // Lead.FirstName holds 40

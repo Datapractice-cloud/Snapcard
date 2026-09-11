@@ -185,8 +185,7 @@ Website, Street, City, State, PostalCode, Country, Description (raw OCR text),
 LeadSource = "Event".
 
 That is the whole mapping. Nothing else is written to Salesforce — no consent
-fields, no capturing rep, no event, no LinkedIn URL, and no Campaign
-membership. The consent checkbox stays in the UI as a required gate before
+fields, no capturing rep, no event, and no Campaign membership. The consent checkbox stays in the UI as a required gate before
 submit; it is simply not sent. Card images are still attached as a
 ContentVersion.
 

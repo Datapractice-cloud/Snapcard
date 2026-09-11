@@ -47,7 +47,6 @@ const responseSchema = {
     email: STRING,
     phone: STRING,
     website: STRING,
-    linkedin: STRING,
     street: STRING,
     city: STRING,
     state: STRING,
@@ -63,7 +62,6 @@ const responseSchema = {
     "email",
     "phone",
     "website",
-    "linkedin",
     "street",
     "city",
     "state",
@@ -80,8 +78,7 @@ Rules:
 - Split the person's name into firstName and lastName. Drop honorifics (Mr, Ms, Dr) and post-nominals (MBA, PhD). If only one name is printed, put it in lastName.
 - title is the person's job title, not the company name or a tagline.
 - Split the postal address into street, city, state, postalCode and country. Put the whole street address, including any suite or floor, in street.
-- website is the company's own site. Never put a LinkedIn URL in website.
-- linkedin is the LinkedIn profile or company URL, if one is printed.
+- website is the company's own site. A LinkedIn URL is not a website: if that is all the card shows, leave website empty.
 - Use the single best phone number if several are printed, preferring a mobile.
 - Use exactly "" for any field the card does not show. Never guess, never invent, never copy a value from one field into another.
 - Transcribe only what is printed; do not translate or reformat it.
