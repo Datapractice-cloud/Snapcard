@@ -36,8 +36,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${manrope.variable} ${jetbrainsMono.variable}`}>{children}</body>
+    // The font variables go on <html>, because globals.css applies font-sans
+    // there — on <body> they would be defined below the element using them.
+    <html lang="en" className={`${manrope.variable} ${jetbrainsMono.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }

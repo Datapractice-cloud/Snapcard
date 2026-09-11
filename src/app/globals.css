@@ -58,9 +58,12 @@
   --shadow-brand: 0 2px 8px rgb(29 78 216 / 0.28);
   --shadow-toast: 0 8px 30px rgb(22 28 45 / 0.3);
 
-  --font-sans: var(--font-manrope);
-  --font-mono: var(--font-jetbrains-mono);
-  --font-heading: var(--font-manrope);
+  /* Cobalt switches from the tab bar to the sidebar at 900px. */
+  --breakpoint-desk: 900px;
+
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-heading: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
@@ -106,6 +109,12 @@
 
   /* Height of the mobile tab bar / offset of the desktop sidebar. */
   --nav-h: 64px;
+  /*
+   * Height of the sticky app bar, which the sidebar sits below: 10px padding,
+   * a 34px user chip, 10px padding, 1px border. AppBar pins itself to this, so
+   * the two can never drift apart.
+   */
+  --appbar-h: calc(55px + env(safe-area-inset-top));
 }
 
 @layer base {
