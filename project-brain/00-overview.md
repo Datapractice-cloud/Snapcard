@@ -3,7 +3,10 @@
 > Identity of the project — what and why. Update only when direction changes.
 >
 > Seeded on 2026-09-12 from the repo's own `context.md`, which was the informal
-> version of this brain. `CLAUDE.md` stays the contract; this folder is the story.
+> version of this brain and was deleted once its content lived here. To read the
+> original: `git show 784b16d:context.md`.
+>
+> `CLAUDE.md` stays the contract; this folder is the story.
 
 ## What is being built
 

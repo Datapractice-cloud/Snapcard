@@ -6,17 +6,20 @@
 > the commit history. Each is dated and anchored to the commit that carried it, so the
 > ordering is real even though the writing is after the fact.
 
-## 2026-09-12 — Project brain seeded from `context.md`
+## 2026-09-12 — Project brain replaces `context.md`
 
 - **Decision:** persistent memory lives in `project-brain/`, committed with the code.
+  `context.md` was seeded into it and then **deleted** — `git show 784b16d:context.md`
+  is the original if it is ever wanted.
 - **Why:** `context.md` was already doing this job informally and was growing without
-  structure; a cold session had to read it whole to find the resume point.
-- **Rejected:** leaving everything in `context.md` — no separation between "current
-  state" (rewritten every session) and "decision log" (append-only), so the resume
-  point kept getting buried.
-- **Impact:** `CLAUDE.md` stays the contract. `project-brain/03-progress.md` +
-  the newest journal file are what a session reads first. The fate of `context.md`
-  is an open question for the user.
+  structure; a cold session had to read it whole to find the resume point. Two files
+  claiming to be the story is how both go stale — the next session updates whichever
+  one it happens to open.
+- **Rejected:** keeping `context.md` alongside the brain (guaranteed drift); cutting
+  it down to a pointer file (an extra hop for no gain, since git keeps the original).
+- **Impact:** `CLAUDE.md` stays the contract. `project-brain/03-progress.md` + the
+  newest journal file are what a session reads first, and the brain is now the single
+  place work gets recorded.
 
 ## 2026-09-12 — Consent removed entirely (`c177f44`, `6d1fcf8`)
 
