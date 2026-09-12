@@ -11,7 +11,6 @@ type LeadDetail = {
   capturedBy: string;
   fields: Record<string, string>;
   rawText: string;
-  consentAt: string | null;
   salesforce: SalesforceResult & { attempts?: number; lastError?: string };
   createdAt: string;
   sides: ("front" | "back")[];
@@ -183,10 +182,6 @@ export function LeadDetailSheet({ clientId, fallback, onClose }: Props) {
                 <h3 className="mb-2 text-[12.5px] font-extrabold">Captured</h3>
                 <dl className="divide-y divide-line rounded-[10px] border border-line">
                   {shown.capturedBy && <Row label="By" value={shown.capturedBy} />}
-                  <Row
-                    label="Consent"
-                    value={shown.consentAt ? `Given ${new Date(shown.consentAt).toLocaleString()}` : "—"}
-                  />
                   {shown.salesforce.leadId && <Row label="Salesforce Id" value={shown.salesforce.leadId} mono />}
                   {shown.salesforce.lastError && <Row label="Last error" value={shown.salesforce.lastError} />}
                 </dl>
@@ -233,7 +228,6 @@ function toDetail(local: LocalLead): LeadDetail {
     capturedBy: "",
     fields: local.fields,
     rawText: "",
-    consentAt: null,
     salesforce: local.salesforce ?? { status: "skipped" },
     createdAt: new Date(local.createdAt).toISOString(),
     sides: [],

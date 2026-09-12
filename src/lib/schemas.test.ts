@@ -27,7 +27,6 @@ function submit(overrides: Record<string, unknown> = {}) {
     clientId: CLIENT_ID,
     fields: validFields,
     rawText: "ACME LTD\nRohan Deshmukh",
-    consent: { given: true },
     images: [{ side: "front", dataUrl: PNG_PIXEL }],
     ...overrides,
   };
@@ -189,12 +188,6 @@ describe("leadSubmitSchema", () => {
 
   it("rejects a clientId that is not a uuid", () => {
     expect(issuePaths(leadSubmitSchema.safeParse(submit({ clientId: "lead-1" })))).toEqual(["clientId"]);
-  });
-
-  it("rejects consent that is absent, false, or merely truthy", () => {
-    expect(leadSubmitSchema.safeParse(submit({ consent: undefined })).success).toBe(false);
-    expect(leadSubmitSchema.safeParse(submit({ consent: { given: false } })).success).toBe(false);
-    expect(leadSubmitSchema.safeParse(submit({ consent: { given: "yes" } })).success).toBe(false);
   });
 
   it("requires at least one image and allows at most two", () => {

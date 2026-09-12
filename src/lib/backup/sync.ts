@@ -174,7 +174,6 @@ async function rebuildSubmit(doc: LeadDoc): Promise<LeadSubmit> {
     clientId: doc.clientId,
     fields: doc.fields as LeadSubmit["fields"],
     rawText: doc.rawText,
-    consent: { given: true },
     images: stored.map((image) => ({
       side: image.side,
       dataUrl: `data:${image.mimeType};base64,${Buffer.from(image.data.buffer).toString("base64")}`,

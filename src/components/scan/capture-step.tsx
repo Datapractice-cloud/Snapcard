@@ -94,7 +94,7 @@ export function CaptureStep({
 
         <p className="mt-3.5 flex items-start gap-[7px] text-xs text-subtle">
           <LockSimple size={14} weight="bold" className="mt-0.5 shrink-0" />
-          Photos are read for text only. Nothing is stored until you confirm consent and save the lead.
+          Photos are read for text only. Nothing is stored until you save the lead.
         </p>
       </div>
     </div>

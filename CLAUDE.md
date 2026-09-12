@@ -6,8 +6,8 @@ architecture decisions. Do not change a decision listed here without asking.
 ## What this is
 
 A PWA for a sales team at events (first use: Dreamforce). A rep photographs a
-business card, Gemini extracts the fields, the rep reviews and confirms
-consent, and the lead is created in Salesforce. Priority order:
+business card, Gemini extracts the fields, the rep reviews and saves, and
+the lead is created in Salesforce. Priority order:
 
 1. **Salesforce is the system of record.** Every lead is written to Salesforce
    first and the rep sees that result.
@@ -105,8 +105,7 @@ Icons: `@phosphor-icons/react` at bold weight, matching the prototype.
   network call. It is sent to Salesforce as `SnapCard_Client_Id__c` and every
   Salesforce write is an **upsert** on that field. Never use plain `POST
   /sobjects/Lead`.
-- `/api/scan` stores nothing. Images are persisted only on submit, after
-  consent is checked.
+- `/api/scan` stores nothing. Images are persisted only on submit.
 - Never log card contents, extracted fields, or images. Log `clientId`,
   status codes and error codes only.
 - All `/api/*` responses set `Cache-Control: no-store`. `sw.js` and the
@@ -198,9 +197,13 @@ Website, Street, City, State, PostalCode, Country, Description (raw OCR text),
 LeadSource = "Event".
 
 That is the whole mapping. Nothing else is written to Salesforce — no consent
-fields, no capturing rep, no event, and no Campaign membership. The consent checkbox stays in the UI as a required gate before
-submit; it is simply not sent. Card images are still attached as a
-ContentVersion.
+fields, no capturing rep, no event, and no Campaign membership. Card images are
+still attached as a ContentVersion.
+
+Consent is no longer collected anywhere: the checkbox, the submit gate, the
+`consent` field on the submit payload and the `consent` stamp on the Atlas
+document were all removed at the user's request. Documents written before that
+still carry the old stamp; nothing reads it.
 
 Upsert call:
 
@@ -222,7 +225,7 @@ Error classification (used by the phone outbox and Phase 2 retry):
 `POST /api/scan` — multipart, 1–2 images ≤ 2 MB each.
 Returns `{ fields: LeadFields, rawText: string, model: string }`.
 
-`POST /api/leads` — JSON `{ clientId, fields, rawText, consent: { given: true }, images: [{ side, dataUrl }] }`.
+`POST /api/leads` — JSON `{ clientId, fields, rawText, images: [{ side, dataUrl }] }`.
 Returns:
 
 ```json

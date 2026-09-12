@@ -9,7 +9,7 @@ import type { ScanResponse } from "@/lib/schemas";
  * Reads a business card and returns the fields for review.
  *
  * This route stores nothing. Images are held only long enough to send to
- * Gemini; they are persisted on submit, after consent, by `/api/leads`.
+ * Gemini; they are persisted on submit by `/api/leads`.
  */
 
 const MAX_IMAGES = 2;

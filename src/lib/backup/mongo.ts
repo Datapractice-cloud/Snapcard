@@ -44,8 +44,6 @@ export const mongoBackupStore: BackupStore = {
             capturedBy,
             fields: submit.fields,
             rawText: submit.rawText,
-            // Stamped by the server, as at capture. The phone never supplies it.
-            consent: { given: true as const, at: now },
             salesforce: {
               status: salesforce.status,
               ...(salesforce.leadId ? { leadId: salesforce.leadId } : {}),

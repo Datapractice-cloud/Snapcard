@@ -13,7 +13,6 @@ function submitWith(fields: Record<string, string>): LeadSubmit {
     clientId: CLIENT_ID,
     fields: { firstName: "Rohan", lastName: "Deshmukh", email: "rohan@acme.com", ...fields },
     rawText: "ACME LTD\nRohan Deshmukh",
-    consent: { given: true },
     images: [{ side: "front", dataUrl: PNG_PIXEL }],
   });
 }

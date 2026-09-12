@@ -138,7 +138,6 @@ export function ScanFlow() {
           clientId: clientId.current,
           fields,
           rawText,
-          consent: { given: true },
           images,
         });
 

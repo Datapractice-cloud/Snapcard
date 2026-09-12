@@ -7,10 +7,8 @@ import { MagicWand } from "@phosphor-icons/react/dist/csr/MagicWand";
 import { PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CONSENT_TEXT } from "@/lib/consent";
 import { leadFieldsSubmitSchema, type LeadFields } from "@/lib/schemas";
 import { Field } from "./field";
 
@@ -35,7 +33,6 @@ export function ReviewStep({
   onBack,
   onSubmit,
 }: Props) {
-  const [consented, setConsented] = useState(false);
   const [text, setText] = useState(rawText);
 
   const form = useForm<LeadFields>({
@@ -153,19 +150,6 @@ export function ReviewStep({
         />
       </details>
 
-      {/* The gate. Not sent to Salesforce — it exists so the rep asks. */}
-      <label className="mt-[18px] flex cursor-pointer items-start gap-3 rounded-[10px] border border-line-strong bg-surface p-3.5">
-        <Checkbox
-          checked={consented}
-          onCheckedChange={(value) => setConsented(value === true)}
-          className="mt-0.5"
-          aria-describedby="consent-text"
-        />
-        <span id="consent-text" className="text-[13px] leading-relaxed font-semibold">
-          {CONSENT_TEXT}
-        </span>
-      </label>
-
       {error && (
         <div
           role="alert"
@@ -180,14 +164,10 @@ export function ReviewStep({
         <Button type="button" variant="outline" size="tap" onClick={onBack} disabled={saving} className="sm:w-auto">
           Back
         </Button>
-        <Button type="submit" size="tap" className="flex-1" disabled={!consented || saving}>
+        <Button type="submit" size="tap" className="flex-1" disabled={saving}>
           {saving ? "Saving…" : "Save lead"}
         </Button>
       </div>
-
-      {!consented && (
-        <p className="mt-2 text-center text-xs text-subtle">Tick the consent box to save this lead.</p>
-      )}
     </form>
   );
 }

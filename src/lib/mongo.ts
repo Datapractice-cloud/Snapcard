@@ -138,7 +138,6 @@ export type LeadDoc = {
   capturedBy: string;
   fields: Record<string, string>;
   rawText: string;
-  consent: { given: true; at: Date };
   salesforce: {
     status: "synced" | "duplicate" | "failed" | "needs_review" | "skipped";
     leadId?: string;
@@ -204,7 +203,6 @@ export type LeadDetail = {
   capturedBy: string;
   fields: Record<string, string>;
   rawText: string;
-  consentAt: string | null;
   salesforce: LeadDoc["salesforce"];
   createdAt: string;
   sides: ("front" | "back")[];
@@ -224,7 +222,6 @@ export async function findLeadDetail(clientId: string): Promise<LeadDetail | nul
     capturedBy: doc.capturedBy,
     fields: doc.fields,
     rawText: doc.rawText,
-    consentAt: doc.consent?.at ? doc.consent.at.toISOString() : null,
     salesforce: doc.salesforce,
     createdAt: doc.createdAt.toISOString(),
     sides: stored.map((image) => image.side),

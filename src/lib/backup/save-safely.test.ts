@@ -11,7 +11,6 @@ const submit = leadSubmitSchema.parse({
   clientId: "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
   fields: { firstName: "Rohan", lastName: "Deshmukh", email: "rohan@acme.com" },
   rawText: "ACME LTD",
-  consent: { given: true },
   images: [{ side: "front", dataUrl: PNG_PIXEL }],
 });
 

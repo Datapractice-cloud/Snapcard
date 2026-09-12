@@ -124,9 +124,6 @@ export const leadSubmitSchema = z.object({
   clientId: z.uuid(),
   fields: leadFieldsSubmitSchema.transform(withCompanyFallback),
   rawText: z.string().max(MAX_RAW_TEXT_CHARS).default(""),
-  // Literal `true`: there is no such thing as a submitted lead without consent,
-  // so an absent or false value is a validation failure, not a flag to store.
-  consent: z.object({ given: z.literal(true) }),
   images: z
     .array(leadImageSchema)
     .min(1, "Attach at least the front of the card.")

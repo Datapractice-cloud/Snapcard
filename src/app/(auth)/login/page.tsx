@@ -68,7 +68,7 @@ export default async function LoginPage({
 
           <p className="mt-3.5 flex items-start gap-[7px] text-xs text-subtle">
             <LockSimple size={14} weight="bold" className="mt-0.5 shrink-0" />
-            Card images are sent for text extraction only and are never stored before you confirm consent.
+            Card images are read for text and stored with the lead you save.
           </p>
         </div>
       </div>
