@@ -29,24 +29,12 @@
 - [ ] Add a permanent read-only `npm run sf:check` (wraps `checkLeadFieldAccess` +
       object describe) so this is one command before every event
 
-### User management — the only genuinely stalled work
-
-`src/lib/password.ts` and `src/lib/users.ts` are written and tested with **zero call
-sites**. Either finish the list below or delete them; tested code nothing calls is what
-rots first.
-
-- [ ] Credentials provider in `src/lib/auth.ts` — alongside Google, not replacing it
-- [ ] Password form on `src/app/(auth)/login/page.tsx`
-- [ ] `/api/admin/users` — create, list, disable (never delete)
-- [ ] Admin Users UI
-- [ ] Rate limit password login (reuse `src/lib/ratelimit.ts`)
 - [ ] **Rotate the Atlas password** — it was pasted into chat, and it is the exact
       control `SETUP.md` §4 relies on to justify `0.0.0.0/0`
 - [ ] Narrow Atlas network access once the password is rotated
 
 ## Next
 
-- [ ] Record the auth override in `CLAUDE.md`: Google-only -> Google + credentials
 - [ ] Fix `SETUP.md`: §3 and §4 both say `MONGODB_DB=snapcard` and scope the Atlas user
       to database `snapcard`. The real database is `snapcard1` — following §4 as
       written builds a working user pointed at the wrong database.
@@ -103,6 +91,9 @@ Gated on the org getting `SnapCard_Client_Id__c` and the FLS grants, then
 
 <!-- - [x] YYYY-MM-DD — task -->
 
+- [x] 2026-09-12 — **Dropped email/password accounts and deleted the 357 lines** —
+      `ADMIN_EMAILS` plus the Google domain restriction already cover who gets in and
+      who sees `/admin`, so the feature solved a problem the app does not have
 - [x] 2026-09-12 — **Salesforce writes a real Lead end to end** — FLS fixed in
       `Integration Permission Set`, and `mapFields` stopped sending the upsert key in
       the body (`4afc396`), which had been failing 100% of writes

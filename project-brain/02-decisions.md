@@ -6,6 +6,26 @@
 > the commit history. Each is dated and anchored to the commit that carried it, so the
 > ordering is real even though the writing is after the fact.
 
+## 2026-09-12 — Google sign-in is the only way in; password accounts deleted
+
+- **Decision:** SnapCard has exactly one sign-in path — Google, restricted to
+  `thinkvibes.com`. `src/lib/password.ts`, `src/lib/password.test.ts` and
+  `src/lib/users.ts` (357 lines, scrypt hashing and an `app_users` collection) were
+  **deleted**. Recover with `git show 0bcd834` if ever needed.
+- **Why:** the user's call, and the reasoning holds. `ADMIN_EMAILS` already decides who
+  sees `/admin`, and the `thinkvibes.com` restriction already decides who gets in at
+  all. Anyone in the company who signs in gets Scan and My Leads. The feature solved a
+  problem the app does not have.
+- **Rejected:** finishing it (Credentials provider, login form, `/api/admin/users`,
+  admin Users UI, login rate limit) — real work for no need; and leaving it in place,
+  which is worse than either, because tested code with zero call sites reads as
+  finished to every future session while quietly drifting out of date.
+- **Impact:** reverses the 2026-09-12 "Email + password accounts, alongside Google"
+  decision above — that entry stays as the record of why it was tried. `CLAUDE.md`'s
+  Google-only description is now simply true again, so the "record the auth override"
+  task is dropped rather than done. `app_users` was never indexed by
+  `scripts/mongo-indexes.ts` and nothing else referenced it.
+
 ## 2026-09-12 — The upsert key must never appear in the request body (`4afc396`)
 
 - **Decision:** `mapFields()` does **not** emit `SnapCard_Client_Id__c`. The external
