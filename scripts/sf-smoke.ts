@@ -33,7 +33,6 @@ const submit = leadSubmitSchema.parse({
     phone: "+1 (415) 555-0134",
   },
   rawText: "SnapCard smoke test — safe to delete",
-  consent: { given: true },
   images: [{ side: "front", dataUrl: PIXEL }],
 });
 
