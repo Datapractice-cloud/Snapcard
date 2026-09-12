@@ -18,9 +18,12 @@ with the card photo, and delete-after-confirm. `/admin` shows today's leads, the
 per rep and a CSV download. It installs as a PWA. Typecheck, lint and 150+ vitest
 tests pass.
 
-Salesforce is **off** (`SALESFORCE_ENABLED=false`) but complete and tested — the org
-still lacks `SnapCard_Client_Id__c` and hides eleven Lead fields behind FLS from the
-integration user. Atlas is the system of record until that changes.
+Salesforce is **off** (`SALESFORCE_ENABLED=false`) but complete and tested, and much
+closer to working than previously recorded. Measured on 2026-09-12: auth,
+the Connected App and `SnapCard_Client_Id__c` are all fine, and `Lead` and
+`ContentVersion` are creatable. The **only** blocker is field-level security hiding 11
+standard Lead fields from `integration.user@thinkvibes.com` — one permission set, which
+the user is applying now. Atlas remains the system of record until the flag flips.
 
 User management is **half built**: `src/lib/password.ts` (scrypt, 12 passing tests)
 and `src/lib/users.ts` (the `app_users` collection) exist. Nothing wires them up yet.
@@ -35,7 +38,15 @@ in the repo; `02-decisions.md` records exactly where they are now wrong.
 
 ## Start here next time
 
-Finish user management, in this order — each step is a commit:
+**Salesforce, not user management.** The user is granting Read + Edit on the 11 blocked
+Lead fields via a permission set. When they confirm, re-run `checkLeadFieldAccess()`
+and expect `0 of 15 blocked`, then work down the Session 3 list in
+`journal/2026-09-12.md`: local smoke test with the flag on, `/limits` for DE file
+storage, org config (duplicate rules, assignment rules, validation rules), the
+Atlas-vs-Salesforce system-of-record decision, then deploy.
+
+User management is paused mid-build — resume it after Salesforce, in this order,
+each step a commit:
 
 1. Add the **Credentials provider** to `src/lib/auth.ts` (Google stays; the
    thinkvibes.com domain restriction is untouched by it).
@@ -63,9 +74,9 @@ nothing else to change while `password.ts` and `users.ts` went in.
 
 ## Blocked / waiting on
 
-- **Salesforce org** — needs `SnapCard_Client_Id__c` (Text(36), External ID, Unique)
-  and FLS grants on eleven standard Lead fields for the integration user. Nobody could
-  fix it in the week it was needed; not blocking anything now that Atlas is the store.
+- **Salesforce org** — down to one thing: FLS grants on 11 standard Lead fields for
+  `integration.user@thinkvibes.com`. `SnapCard_Client_Id__c` already exists and is
+  writable, contrary to what this file said before 2026-09-12. In the user's hands now.
 - **Hostinger** — env vars still to be set there, and a Google OAuth redirect URI for
   `snapcard.thinkvibes-exam.com`.
 - **Security housekeeping** — the Atlas password was pasted into chat and should be

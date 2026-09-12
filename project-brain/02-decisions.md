@@ -6,6 +6,41 @@
 > the commit history. Each is dated and anchored to the commit that carried it, so the
 > ordering is real even though the writing is after the fact.
 
+## 2026-09-12 — The Developer Edition org is the production target
+
+- **Decision:** event leads land in the existing `…develop.my.salesforce.com`
+  Developer Edition org. There is no separate production org to migrate to.
+- **Why:** the user's call, stated directly when asked. It is the org the team has.
+- **Rejected:** standing up a sandbox or a production org and redoing the custom field,
+  Connected App and permissions there.
+- **Impact:** `SETUP.md` §2 says "do this in a sandbox first, then production" and
+  warns off throwaway orgs — that instruction no longer describes the plan. DE orgs
+  carry small data and **file** storage limits, no uptime SLA, and can be deactivated
+  for inactivity. Card images attach as ContentVersion, so **file storage is the limit
+  most likely to bite**; if `/limits` shows it is tight, keep images in Atlas only and
+  skip `attachImage`. Measure before the event, not during it.
+
+## 2026-09-12 — Salesforce is blocked only by field-level security (corrects an earlier diagnosis)
+
+- **Decision:** treat the org as configured except for FLS. Fix is a permission set
+  granting **Read + Edit** on 11 Lead fields to `integration.user@thinkvibes.com`.
+- **Why:** measured, not assumed. A read-only describe reports
+  `SnapCard_Client_Id__c` **writable** and `Lead.createable = true`,
+  `ContentVersion.createable = true`, with `v60.0` reachable — while `Title`, `Email`,
+  `Phone`, `Website`, `Street`, `City`, `State`, `PostalCode`, `Country`,
+  `Description` and `LeadSource` come back hidden. Those are *standard* fields and
+  cannot be absent, so FLS is the only explanation.
+- **Corrects:** the brain and `context.md` before it both said the org **is missing**
+  `SnapCard_Client_Id__c`. That is false — it exists and is writable. The FLS half of
+  that diagnosis was accurate, including the count of eleven.
+- **Rejected:** the hypothesis that the user's `Analytics Cloud Integration User`
+  license was the blocker. It looks wrong next to the `Minimum Access - API Only
+  Integrations` profile, which is conventionally paired with the `Salesforce
+  Integration` license — but the object describe disproves it. Noted because the
+  mismatch will look alarming to the next person who spots it.
+- **Impact:** the Salesforce work is far smaller than the brain implied. Nothing needs
+  building; one permission set stands between the app and a working integration.
+
 ## 2026-09-12 — Planning docs folded into the brain
 
 - **Decision:** `PLAN-1-salesforce.md`, `PLAN-2-atlas.md`, `SETUP.md` and `README.md`

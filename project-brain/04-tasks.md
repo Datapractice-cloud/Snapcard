@@ -4,6 +4,28 @@
 
 ## Now
 
+### Salesforce — the active thread
+
+- [ ] **User:** permission set granting Read + Edit on `Title`, `Email`, `Phone`,
+      `Website`, `Description`, `LeadSource` and the compound `Address` row, assigned
+      to `integration.user@thinkvibes.com`. ContentVersion needs nothing.
+- [ ] Re-run `checkLeadFieldAccess()` — expect `0 of 15 blocked`
+- [ ] `SALESFORCE_ENABLED=true` **locally only**, then `npm run sf:smoke -- --full`
+- [ ] Query `/limits` — DE **file** storage is the ceiling card images will hit. If
+      tight, keep images in Atlas and skip `attachImage`.
+- [ ] Confirm duplicate rules are **Block + Report** — on "Allow" the `duplicate`
+      branch goes dead and the event makes silent duplicates
+- [ ] If any Lead Assignment Rule is active, give the integration user **View All** on
+      Lead, or `/admin` silently empties as leads are reassigned
+- [ ] Check Lead validation rules that would reject event data
+- [ ] **Decide what turning Salesforce on means for Atlas** — the flag does not turn
+      Atlas off, and `skipped` is currently what lets an outbox item drop. Needs a real
+      decision with the user, not a default.
+- [ ] Add a permanent read-only `npm run sf:check` (wraps `checkLeadFieldAccess` +
+      object describe) so this is one command before every event
+
+### User management — paused mid-build, resume after Salesforce
+
 - [ ] Credentials provider in `src/lib/auth.ts` — alongside Google, not replacing it
 - [ ] Password form on `src/app/(auth)/login/page.tsx`
 - [ ] `/api/admin/users` — create, list, disable (never delete)
