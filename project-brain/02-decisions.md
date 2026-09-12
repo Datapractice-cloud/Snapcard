@@ -6,6 +6,41 @@
 > the commit history. Each is dated and anchored to the commit that carried it, so the
 > ordering is real even though the writing is after the fact.
 
+## 2026-09-12 — The upsert key must never appear in the request body (`4afc396`)
+
+- **Decision:** `mapFields()` does **not** emit `SnapCard_Client_Id__c`. The external
+  id travels in the URL path only.
+- **Why:** Salesforce rejects the write outright when an upsert names its own external
+  id in the sobject data — `INVALID_FIELD: The SnapCard_Client_Id__c field should not
+  be specified in the sobject data`. It is a 100% failure, not an edge case: every
+  lead came back `needs_review`, and the first real card at the event would have hit it.
+- **Rejected:** stripping the field inside `upsertLead` and leaving `mapFields`
+  emitting it — that leaves a pure function whose output cannot legally be PATCHed,
+  which is a trap for the next caller. `mapFields` has exactly one production caller.
+- **Impact:** `PLAN-1` Task 5 specifies `mapFields` as producing
+  `SnapCard_Client_Id__c`; that instruction is wrong and must not be followed back in.
+  The unit test asserted the id **was** in the body, so the suite confirmed the bug
+  instead of catching it — the assertion is now inverted into a regression test.
+- **How it hid for so long:** Salesforce has been off since the code was written, so no
+  real upsert ever ran. Unit tests over a pure mapper cannot catch a contract the
+  remote API enforces. The lesson is in `01-architecture.md` under Gotchas.
+
+## 2026-09-12 — Lead field grants live in `Integration Permission Set`
+
+- **Decision:** the integration user's Lead object and field permissions come from
+  **`Integration Permission Set`**. The permission set named `Snapcard Integration` is
+  assigned but grants nothing on Lead.
+- **Why:** `Snapcard Integration` was created with a license that excludes every core
+  CRM object — `Lead`, `Account`, `Contact`, `Opportunity` and `Case` are all absent
+  from its Object Settings list, so Lead permissions can never be added to it. This is
+  a licensing constraint, not a missing checkbox.
+- **Rejected:** granting the fields in `Snapcard Integration` (impossible); recreating
+  it with a different license (slower, and the working permission set already existed).
+- **Impact:** two similarly-named permission sets are assigned to the integration user
+  and only one does anything. **`Snapcard Integration` should be deleted** once leads
+  are flowing — an empty permission set with the obvious name is exactly what sent this
+  session down an hour-long false trail.
+
 ## 2026-09-12 — The Developer Edition org is the production target
 
 - **Decision:** event leads land in the existing `…develop.my.salesforce.com`

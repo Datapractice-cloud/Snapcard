@@ -228,6 +228,25 @@ Each one was paid for. Do not rediscover them.
 - **Node 20.6 is the floor, not 20.0** — `npm run sf:smoke` uses `node --env-file`.
 - **Hostinger needs a Business, Unlimited or Cloud plan.** Premium does not run Node
   apps at all.
+- **Never put the external id in the body of an upsert that keys on it.** Salesforce
+  answers `INVALID_FIELD: The SnapCard_Client_Id__c field should not be specified in
+  the sobject data` and the write fails every time. The id goes in the URL path only.
+  Cost a session to find, because the unit test asserted the opposite — a pure mapper's
+  tests cannot catch a contract the remote API enforces, so anything shaped like "what
+  Salesforce accepts" needs a real call against the org, not a fixture.
+- **The integration user has no Delete on Lead.** Production never deletes, so this
+  only affects `npm run sf:smoke`, whose final cleanup step fails with
+  `INSUFFICIENT_ACCESS_OR_READONLY` and leaves its test Lead behind. Grant Delete in
+  `Integration Permission Set` or tidy up by hand after each smoke run.
+- **The External Client App has `IP Relaxation = Enforce IP restrictions`.** Auth
+  succeeds from whichever IP has been added; **Hostinger's outbound IP is different**,
+  so the first production write will fail auth until that IP is trusted or the setting
+  is relaxed. Nothing in the app reports this as a config problem — it looks like
+  broken credentials.
+- **Two permission sets are assigned to the integration user and only one works.**
+  `Integration Permission Set` carries the real Lead grants. `Snapcard Integration` was
+  created under a license that excludes every CRM object, so it cannot grant Lead
+  anything — its Object Settings list has no `Lead` row at all. Delete it.
 
 ### Serwist caching strategy
 

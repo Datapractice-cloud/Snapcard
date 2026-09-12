@@ -6,10 +6,15 @@
 
 ### Salesforce — the active thread
 
-- [ ] **User:** permission set granting Read + Edit on `Title`, `Email`, `Phone`,
-      `Website`, `Description`, `LeadSource` and the compound `Address` row, assigned
-      to `integration.user@thinkvibes.com`. ContentVersion needs nothing.
-- [ ] Re-run `checkLeadFieldAccess()` — expect `0 of 15 blocked`
+- [ ] **User:** delete the test Lead `00QQy00000nmzY2MAI` ("SnapCard Proof 15:20") from
+      the UI — the integration user has no Delete on Lead, so the API could not
+- [ ] **Relax `IP Relaxation` on the External Client App**, or add Hostinger's outbound
+      IP. Currently *Enforce IP restrictions*; the first production write will fail auth
+      and it will look like bad credentials.
+- [ ] Grant Delete on Lead in `Integration Permission Set`, or accept that
+      `npm run sf:smoke` leaves its test Lead behind every run
+- [ ] Delete the `Snapcard Integration` permission set — it is assigned but its license
+      excludes every CRM object, so it grants nothing and will mislead the next person
 - [ ] `SALESFORCE_ENABLED=true` **locally only**, then `npm run sf:smoke -- --full`
 - [ ] Query `/limits` — DE **file** storage is the ceiling card images will hit. If
       tight, keep images in Atlas and skip `attachImage`.
@@ -94,6 +99,9 @@ Gated on the org getting `SnapCard_Client_Id__c` and the FLS grants, then
 
 <!-- - [x] YYYY-MM-DD — task -->
 
+- [x] 2026-09-12 — **Salesforce writes a real Lead end to end** — FLS fixed in
+      `Integration Permission Set`, and `mapFields` stopped sending the upsert key in
+      the body (`4afc396`), which had been failing 100% of writes
 - [x] 2026-09-12 — Folded `PLAN-1`, `PLAN-2`, `SETUP.md` and `README.md` into the brain
 - [x] 2026-09-12 — Initialised `project-brain/`, seeded from `context.md`, then
       deleted `context.md` so there is one place to read and one place to update

@@ -18,12 +18,15 @@ with the card photo, and delete-after-confirm. `/admin` shows today's leads, the
 per rep and a CSV download. It installs as a PWA. Typecheck, lint and 150+ vitest
 tests pass.
 
-Salesforce is **off** (`SALESFORCE_ENABLED=false`) but complete and tested, and much
-closer to working than previously recorded. Measured on 2026-09-12: auth,
-the Connected App and `SnapCard_Client_Id__c` are all fine, and `Lead` and
-`ContentVersion` are creatable. The **only** blocker is field-level security hiding 11
-standard Lead fields from `integration.user@thinkvibes.com` — one permission set, which
-the user is applying now. Atlas remains the system of record until the flag flips.
+**Salesforce now works.** Proven against `thinkvibessoftware3-dev-ed` on 2026-09-12:
+two upserts with one `clientId` returned the same Lead Id, all 16 mapped fields landed,
+and the card image attached. It took fixing field-level security (the grants were in a
+permission set whose license excludes CRM objects) and a real bug in our own code — the
+upsert key was being sent in the request body, which failed 100% of writes.
+
+`SALESFORCE_ENABLED` is still **`false`** everywhere; it was set only inside one-off
+verification scripts. Atlas remains the system of record until that flag is flipped
+deliberately, which is a decision still to be made.
 
 User management is **half built**: `src/lib/password.ts` (scrypt, 12 passing tests)
 and `src/lib/users.ts` (the `app_users` collection) exist. Nothing wires them up yet.
@@ -38,12 +41,20 @@ in the repo; `02-decisions.md` records exactly where they are now wrong.
 
 ## Start here next time
 
-**Salesforce, not user management.** The user is granting Read + Edit on the 11 blocked
-Lead fields via a permission set. When they confirm, re-run `checkLeadFieldAccess()`
-and expect `0 of 15 blocked`, then work down the Session 3 list in
-`journal/2026-09-12.md`: local smoke test with the flag on, `/limits` for DE file
-storage, org config (duplicate rules, assignment rules, validation rules), the
-Atlas-vs-Salesforce system-of-record decision, then deploy.
+**Salesforce, not user management.** Writes are proven; what remains is everything
+between "it works on this laptop" and "it works at the event". In order:
+
+1. **Relax or whitelist the IP** on the External Client App — it is set to *Enforce IP
+   restrictions*, and Hostinger's outbound IP differs from the dev machine's, so the
+   first production write fails auth in a way that looks like bad credentials.
+2. `/limits` for DE **file** storage — card images are ContentVersions.
+3. Duplicate rules (**Block + Report**), assignment rules (**View All** on Lead if any
+   are active), validation rules.
+4. **Decide what turning Salesforce on means for Atlas** — not yet discussed with the
+   user, and it is not a default to pick silently.
+5. `SALESFORCE_ENABLED=true` locally, full `sf:smoke`, then Hostinger env vars, deploy.
+
+See Session 4 in `journal/2026-09-12.md` for the detail.
 
 User management is paused mid-build — resume it after Salesforce, in this order,
 each step a commit:
