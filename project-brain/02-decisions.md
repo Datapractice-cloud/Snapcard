@@ -2,9 +2,9 @@
 
 > Append-only. Newest entry at the TOP. Never edit old entries — if a decision is reversed, add a new entry linking back.
 >
-> Entries below 2026-09-12 were reconstructed from `context.md`, `CLAUDE.md` and the
-> commit history when the brain was created; their dates are the date of that
-> reconstruction, not of the original decision.
+> Entries below were reconstructed on 2026-09-12 from `context.md`, `CLAUDE.md` and
+> the commit history. Each is dated and anchored to the commit that carried it, so the
+> ordering is real even though the writing is after the fact.
 
 ## 2026-09-12 — Project brain seeded from `context.md`
 
@@ -18,7 +18,7 @@
   the newest journal file are what a session reads first. The fate of `context.md`
   is an open question for the user.
 
-## 2026-09-12 — Consent removed entirely
+## 2026-09-12 — Consent removed entirely (`c177f44`, `6d1fcf8`)
 
 - **Decision:** stop collecting consent. The checkbox, the submit gate, the `consent`
   field on the submit payload and the `consent` stamp on the Atlas document are gone.
@@ -26,10 +26,9 @@
   become a UI gate protecting nothing.
 - **Rejected:** keeping it as a UI-only gate (the state it was in) — friction with no
   downstream consumer.
-- **Impact:** documents written before this still carry the old stamp; nothing reads
-  it. Commits `c177f44`, `6d1fcf8`.
+- **Impact:** documents written before this still carry the old stamp; nothing reads it.
 
-## 2026-09-12 — Email + password accounts, alongside Google
+## 2026-09-12 — Email + password accounts, alongside Google (`0bcd834`)
 
 - **Decision:** admins can create email/password accounts for people without a
   thinkvibes.com Google account. Passwords hash with Node's built-in `scrypt`.
@@ -50,23 +49,31 @@
   exactly the signal it existed to hide. It is now generated at first use with the
   real `hashPassword()`. Measured after: 306ms vs 300ms.
 
-## 2026-09-12 — MongoDB Atlas became the system of record; Salesforce switched off
+## 2026-09-11 — MongoDB Atlas became the system of record; Salesforce switched off (`1703562`, `888dde7`)
 
 - **Decision:** `SALESFORCE_ENABLED=false`. `upsertLead` short-circuits to
   `{ status: "skipped" }`, no images are attached, the sync cron is a no-op, and the
   outbox reducer treats "skipped" as "the backup saved it, let the item go."
 - **Why:** the Salesforce org was never signed off — it is missing
   `SnapCard_Client_Id__c` and hides eleven standard Lead fields behind field-level
-  security from the integration user. Keeping leads hostage to an org nobody could
-  fix that week was worse than storing them in Atlas.
+  security from the integration user (found by `9a9c5e3`, which checks Lead field
+  access before trying to write one).
 - **Rejected:** waiting for the org (blocks the event); deleting the Salesforce code
   (throws away correct, tested work for a reversible problem).
 - **Impact:** inverts priority 1 in `CLAUDE.md` for as long as it is set, and nothing
   else. `MONGODB_URI` must be set, or a lead exists only on the phone. Flipping the
   env var back turns Salesforce on with the mapping, upsert, retry and attachment
-  logic intact. Commits `1703562`, `888dde7`.
+  logic intact.
 
-## 2026-09-12 — Salesforce field scope cut twice
+## 2026-09-11 — `gemini-3.5-flash`, not flash-lite (`4a47dac`)
+
+- **Decision:** `GEMINI_MODEL=gemini-3.5-flash`.
+- **Why:** measured. flash-lite took 24-33s per scan and timed out mid-scan;
+  flash is ~2s.
+- **Rejected:** `gemini-3.5-flash-lite`, on cost grounds — it lost on latency.
+- **Impact:** the model name stays an env var, so this is one line to revisit.
+
+## 2026-09-11 — Salesforce field scope cut twice (`e9622e9`, `b8ffb71`)
 
 - **Decision:** nothing is written to Salesforce beyond the standard Lead fields plus
   `SnapCard_Client_Id__c`. Card images are still attached as a ContentVersion.
@@ -77,16 +84,7 @@
   mapping, tests and docs. The review form is exactly: First Name*, Last Name*,
   Company, Email*, Phone*, Job Title, Website, Address, Description.
 
-## 2026-09-12 — `gemini-3.5-flash`, not flash-lite
-
-- **Decision:** `GEMINI_MODEL=gemini-3.5-flash`.
-- **Why:** measured. flash-lite took 24-33s per scan and timed out mid-scan;
-  flash is ~2s.
-- **Rejected:** `gemini-3.5-flash-lite`, on cost grounds — it lost on latency.
-- **Impact:** the model name stays an env var, so this is one line to revisit.
-  Commit `4a47dac`.
-
-## 2026-09-12 — Cobalt is the only visual reference
+## 2026-09-11 — Cobalt is the only visual reference (`f4b38f9`)
 
 - **Decision:** `snapcard-prototypes/layout-1.html` ("Cobalt") is the sole design
   source. Rebuilt in Tailwind + shadcn themed to its tokens.
