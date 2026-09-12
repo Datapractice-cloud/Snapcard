@@ -31,8 +31,14 @@ describe("mapFields", () => {
     });
   });
 
-  it("stamps the external id, which is what makes the write an upsert", () => {
-    expect(mapFields(submitWith({})).SnapCard_Client_Id__c).toBe(CLIENT_ID);
+  /*
+   * Regression: it used to. Salesforce answers 400 INVALID_FIELD — "should not
+   * be specified in the sobject data" — when the external id is in the body of
+   * an upsert that already keys on it in the URL, which turned every single
+   * lead into needs_review.
+   */
+  it("leaves the external id out of the body — it is the key, and it goes in the path", () => {
+    expect(mapFields(submitWith({}))).not.toHaveProperty("SnapCard_Client_Id__c");
   });
 
   it("puts the OCR text in Description so an admin can check a wrong field", () => {
@@ -103,7 +109,6 @@ describe("mapFields", () => {
       "LeadSource",
       "Phone",
       "PostalCode",
-      "SnapCard_Client_Id__c",
       "State",
       "Street",
       "Title",
