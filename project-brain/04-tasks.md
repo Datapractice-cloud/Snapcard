@@ -29,7 +29,11 @@
 - [ ] Add a permanent read-only `npm run sf:check` (wraps `checkLeadFieldAccess` +
       object describe) so this is one command before every event
 
-### User management — paused mid-build, resume after Salesforce
+### User management — the only genuinely stalled work
+
+`src/lib/password.ts` and `src/lib/users.ts` are written and tested with **zero call
+sites**. Either finish the list below or delete them; tested code nothing calls is what
+rots first.
 
 - [ ] Credentials provider in `src/lib/auth.ts` — alongside Google, not replacing it
 - [ ] Password form on `src/app/(auth)/login/page.tsx`
