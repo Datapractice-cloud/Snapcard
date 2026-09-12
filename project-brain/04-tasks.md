@@ -8,16 +8,16 @@
 
 - [ ] **User:** delete the test Lead `00QQy00000nmzY2MAI` ("SnapCard Proof 15:20") from
       the UI — the integration user has no Delete on Lead, so the API could not
-- [ ] **Relax `IP Relaxation` on the External Client App**, or add Hostinger's outbound
-      IP. Currently *Enforce IP restrictions*; the first production write will fail auth
-      and it will look like bad credentials.
 - [ ] Grant Delete on Lead in `Integration Permission Set`, or accept that
       `npm run sf:smoke` leaves its test Lead behind every run
 - [ ] Delete the `Snapcard Integration` permission set — it is assigned but its license
       excludes every CRM object, so it grants nothing and will mislead the next person
 - [ ] `SALESFORCE_ENABLED=true` **locally only**, then `npm run sf:smoke -- --full`
-- [ ] Query `/limits` — DE **file** storage is the ceiling card images will hit. If
-      tight, keep images in Atlas and skip `attachImage`.
+- [ ] **User:** read Setup -> Storage Usage -> **File Storage**. The API cannot: the
+      integration user lacks "View Setup and Configuration", so `/limits` answers 403
+      `API_DISABLED_FOR_ORG`. Card images run ~150-400 KB each, up to 2 per lead, so a
+      small DE allowance fills in roughly 25-60 cards. If tight, keep images in Atlas
+      and skip `attachImage` — one line, and the images stay viewable in SnapCard.
 - [ ] Confirm duplicate rules are **Block + Report** — on "Allow" the `duplicate`
       branch goes dead and the event makes silent duplicates
 - [ ] If any Lead Assignment Rule is active, give the integration user **View All** on
@@ -91,6 +91,9 @@ Gated on the org getting `SnapCard_Client_Id__c` and the FLS grants, then
 
 <!-- - [x] YYYY-MM-DD — task -->
 
+- [x] 2026-09-12 — Set `IP Relaxation` to "Relax IP restrictions" on the External
+      Client App, so the first write from Hostinger is not refused as bad credentials.
+      Unverifiable from the dev machine, whose IP was already allowed.
 - [x] 2026-09-12 — **Dropped email/password accounts and deleted the 357 lines** —
       `ADMIN_EMAILS` plus the Google domain restriction already cover who gets in and
       who sees `/admin`, so the feature solved a problem the app does not have
