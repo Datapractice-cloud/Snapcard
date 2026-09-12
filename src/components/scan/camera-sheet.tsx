@@ -105,7 +105,7 @@ export function CameraSheet({ label, onCapture, onClose, onUseDeviceCamera }: Pr
   }, [onClose]);
 
   return (
-    <div role="dialog" aria-modal aria-label={`Photograph the ${label.toLowerCase()} of the card`} className="fixed inset-0 z-50 flex flex-col bg-[#0c0e12]">
+    <div role="dialog" aria-modal aria-label={`Photograph the ${label.toLowerCase()} of the card`} className="fixed inset-0 z-50 flex flex-col bg-[var(--scrim)]">
       <div className="flex items-center justify-between px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3">
         <p className="text-[14px] font-extrabold text-white">{label} of the card</p>
         <button

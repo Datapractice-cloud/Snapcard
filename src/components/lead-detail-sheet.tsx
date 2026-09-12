@@ -177,7 +177,7 @@ export function LeadDetailSheet({ clientId, fallback, onClose, onDeleted }: Prop
           )}
 
           {localOnly && (
-            <p className="rounded-[10px] border border-[#f3e4c4] bg-warn-soft px-3.5 py-3 text-[13px] font-bold text-warn">
+            <p className="rounded-[10px] border border-[var(--warn-line)] bg-warn-soft px-3.5 py-3 text-[13px] font-bold text-warn">
               This lead is only on this phone — it was scanned before the database was
               connected, so there is no stored card image.
             </p>
@@ -266,7 +266,7 @@ export function LeadDetailSheet({ clientId, fallback, onClose, onDeleted }: Prop
                     type="button"
                     variant="destructive"
                     onClick={() => setConfirming(true)}
-                    className="h-11 shrink-0 gap-2 rounded-xl px-4 font-bold"
+                    className="h-12 shrink-0 gap-2 rounded-xl px-4 font-bold"
                   >
                     <Trash size={17} weight="bold" />
                     Delete

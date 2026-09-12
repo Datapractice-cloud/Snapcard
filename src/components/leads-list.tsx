@@ -151,25 +151,25 @@ export function LeadsList() {
   return (
     <div>
       {waiting > 0 && (
-        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[14px] border border-[#f3e4c4] bg-warn-soft px-4 py-3">
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[14px] border border-[var(--warn-line)] bg-warn-soft px-4 py-3">
           <ArrowsClockwise size={18} weight="bold" className="shrink-0 text-warn" />
           <p className="flex-1 text-[13.5px] font-bold text-warn">
             {waiting} {waiting === 1 ? "lead is" : "leads are"} waiting to sync. They are safe on this phone.
           </p>
-          <Button type="button" variant="outline" onClick={syncNow} disabled={syncing} className="h-10">
+          <Button type="button" variant="outline" onClick={syncNow} disabled={syncing} className="h-12">
             {syncing ? "Syncing…" : "Sync now"}
           </Button>
         </div>
       )}
 
       {offline && (
-        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[14px] border border-[#f3e4c4] bg-warn-soft px-4 py-3">
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[14px] border border-[var(--warn-line)] bg-warn-soft px-4 py-3">
           <CloudSlash size={18} weight="bold" className="shrink-0 text-warn" />
           <p className="flex-1 text-[13.5px] font-bold text-warn">
             Showing only what is saved on this phone. Your full history appears once the server can
             be reached.
           </p>
-          <Button type="button" variant="outline" onClick={() => void load()} className="h-10">
+          <Button type="button" variant="outline" onClick={() => void load()} className="h-12">
             Retry
           </Button>
         </div>

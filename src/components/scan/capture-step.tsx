@@ -85,7 +85,7 @@ export function CaptureStep({
         <Button
           type="button"
           variant="ghost"
-          className="mt-1.5 h-11 w-full text-[13px] font-bold text-muted-foreground"
+          className="mt-1.5 h-12 w-full text-[13px] font-bold text-muted-foreground"
           onClick={onSkipToManual}
           disabled={scanning}
         >

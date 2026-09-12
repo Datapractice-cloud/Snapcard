@@ -55,15 +55,15 @@ export function InstallPrompt() {
   if (dismissed || (!androidPrompt && !showIosHint)) return null;
 
   return (
-    <div className="mb-4 flex items-start gap-3 rounded-[14px] border border-[#d7e3fb] bg-brand-soft px-4 py-3.5">
+    <div className="mb-4 flex items-start gap-3 rounded-[14px] border border-[var(--brand-line)] bg-brand-soft px-4 py-3.5">
       <DeviceMobile size={20} weight="bold" className="mt-0.5 shrink-0 text-brand" />
 
       <div className="min-w-0 flex-1">
-        <p className="text-[13.5px] font-extrabold text-[#1e3a8a]">Install SnapCard</p>
+        <p className="text-[13.5px] font-extrabold text-[var(--brand-deep)]">Install SnapCard</p>
 
         {androidPrompt ? (
           <>
-            <p className="mt-0.5 text-[13px] text-[#1e3a8a]">
+            <p className="mt-0.5 text-[13px] text-[var(--brand-deep)]">
               Keeps you signed in and works when the venue wifi does not.
             </p>
             <Button
@@ -80,7 +80,7 @@ export function InstallPrompt() {
             </Button>
           </>
         ) : (
-          <p className="mt-0.5 flex flex-wrap items-center gap-1 text-[13px] text-[#1e3a8a]">
+          <p className="mt-0.5 flex flex-wrap items-center gap-1 text-[13px] text-[var(--brand-deep)]">
             Tap
             <Export size={15} weight="bold" className="inline shrink-0" />
             Share, then <span className="font-bold">Add to Home Screen</span>.
@@ -92,7 +92,7 @@ export function InstallPrompt() {
         type="button"
         aria-label="Dismiss the install prompt"
         onClick={() => dismiss(setDismissed)}
-        className="-m-1 shrink-0 p-1 text-[#1e3a8a]/60 hover:text-[#1e3a8a]"
+        className="-m-1 shrink-0 p-1 text-[var(--brand-deep)]/60 hover:text-[var(--brand-deep)]"
       >
         <X size={16} weight="bold" />
       </button>
