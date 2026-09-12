@@ -6,7 +6,7 @@ export default function LeadsPage() {
     <>
       <PageHeader
         title="My leads"
-        subtitle="Every card you have scanned on this phone, newest first."
+        subtitle="Every card you have scanned on this account, newest first."
       />
       <LeadsList />
     </>

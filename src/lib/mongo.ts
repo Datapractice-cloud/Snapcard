@@ -1,5 +1,6 @@
 import { MongoClient, type Binary, type Db } from "mongodb";
 import { env } from "./env";
+import type { LeadFields, SalesforceResult } from "./schemas";
 
 /**
  * One MongoClient for the whole process.
@@ -197,6 +198,43 @@ export async function listTodaysLeadsFromAtlas(limit = 200) {
     capturedBy: doc.capturedBy ?? "",
   }));
 }
+
+/**
+ * Every lead this rep has ever captured, newest first.
+ *
+ * The account is the identity, not the phone: /leads used to read only the
+ * browser's IndexedDB, so signing in on a second device — or after the browser
+ * evicted its storage — showed a rep nothing while their leads sat here.
+ *
+ * Shaped like the phone's own HistoryItem, epoch milliseconds and all, so the
+ * two lists merge by clientId without a translation layer in between.
+ * Covered by the capturedBy + createdAt index.
+ */
+export async function listLeadsForRep(capturedBy: string, limit = 500) {
+  const docs = await withMongo((db) =>
+    db
+      .collection<LeadDoc>("leads")
+      .find({ capturedBy })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .toArray(),
+  );
+
+  return docs.map((doc) => ({
+    clientId: doc.clientId,
+    // Stored as written; re-parsing here would only re-run rules the submit
+    // already passed, and the same cast is what sync.ts does.
+    fields: doc.fields as LeadFields,
+    createdAt: doc.createdAt.getTime(),
+    salesforce: {
+      status: doc.salesforce?.status ?? "skipped",
+      ...(doc.salesforce?.leadId ? { leadId: doc.salesforce.leadId } : {}),
+      ...(doc.salesforce?.duplicateOf ? { duplicateOf: doc.salesforce.duplicateOf } : {}),
+    } satisfies SalesforceResult,
+  }));
+}
+
+export type RepLead = Awaited<ReturnType<typeof listLeadsForRep>>[number];
 
 export type LeadDetail = {
   clientId: string;

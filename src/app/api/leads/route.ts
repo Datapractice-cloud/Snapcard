@@ -1,5 +1,7 @@
 import { after } from "next/server";
 import { requireSession } from "@/lib/auth";
+import { env } from "@/lib/env";
+import { listLeadsForRep } from "@/lib/mongo";
 import { getBackupStore, saveLeadSafely } from "@/lib/backup";
 import { json, jsonError } from "@/lib/http";
 import { rateLimit } from "@/lib/ratelimit";
@@ -19,6 +21,28 @@ const SUBMITS_PER_MINUTE = 60;
 
 /** Two compressed card photos plus fields. Well above a real submit. */
 const MAX_BODY_BYTES = 6 * 1024 * 1024;
+
+/**
+ * Every lead this rep has captured, on any device, however long ago.
+ *
+ * /leads reads this rather than only the browser's IndexedDB: the account owns
+ * the leads, not the handset it was standing in when it scanned them. Ownership
+ * is the same rule the single-lead route applies — a rep sees their own.
+ */
+export async function GET() {
+  const session = await requireSession();
+  if (session instanceof Response) return session;
+
+  /*
+   * 503 rather than an empty list. "No backup configured" and "you have no
+   * leads" look identical to the phone otherwise, and showing a rep an empty
+   * list they know is wrong is the bug this endpoint exists to fix.
+   */
+  if (!env.MONGODB_URI) return jsonError("backup_not_configured", 503);
+
+  const leads = await listLeadsForRep(session.user.email as string);
+  return json({ leads });
+}
 
 export async function POST(request: Request) {
   const session = await requireSession();
