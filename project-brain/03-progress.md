@@ -28,6 +28,11 @@ and `src/lib/users.ts` (the `app_users` collection) exist. Nothing wires them up
 Not deployed with the current code: `production` is well behind `main`, and merging
 `main` into `production` **is** the deploy. It has not been asked for.
 
+The planning docs (`PLAN-1-salesforce.md`, `PLAN-2-atlas.md`, `SETUP.md`, `README.md`)
+have been folded into this brain and are no longer the place to look for current truth
+— they describe a Salesforce-first app with consent, which this is not. They are still
+in the repo; `02-decisions.md` records exactly where they are now wrong.
+
 ## Start here next time
 
 Finish user management, in this order — each step is a commit:

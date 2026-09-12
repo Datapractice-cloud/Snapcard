@@ -84,6 +84,86 @@ snapcard-prototypes/   read-only visual reference — "Cobalt" is layout-1.html
   below 900px and a 232px sidebar above it. Built in Tailwind + shadcn themed to
   Cobalt — the prototype's HTML/CSS was never pasted.
 
+## Contracts and limits
+
+Folded in from `PLAN-1-salesforce.md`, `PLAN-2-atlas.md` and `SETUP.md` on 2026-09-12,
+then checked against the code. Where the two disagreed the code won, and the
+divergence is noted.
+
+### Who may sign in
+
+`signIn` returns false unless **all three** hold: `profile.email_verified === true`,
+`profile.hd === ALLOWED_EMAIL_DOMAIN`, and the email ends with `@<domain>`. All three
+on purpose — `hd` alone can be spoofed by some flows, and the email domain alone does
+not prove a Workspace account.
+
+### Numbers, as they are in the code
+
+| Limit | Value | Where |
+|---|---|---|
+| Scan rate limit | 20/min per email | `src/app/api/scan/route.ts` |
+| Submit rate limit | 60/min per rep | `src/app/api/leads/route.ts` |
+| Upload size | 2 MB per image, 2 images max | `src/app/api/scan/route.ts` |
+| Client compression | long edge 1600 px, JPEG q0.8 | `src/lib/client/compress.ts` |
+| Stored image cap | 1 MB after decode, else dropped | `src/lib/backup/mongo.ts` |
+| Gemini | `temperature: 0`, JSON `responseSchema` | `src/lib/gemini.ts` |
+| Mongo | `serverSelectionTimeoutMS: 30_000`, `maxPoolSize: 10`, **no** `socketTimeoutMS` | `src/lib/mongo.ts` |
+| Session | JWT, 30 days | `src/lib/auth.config.ts` |
+
+`PLAN-2` specified `serverSelectionTimeoutMS: 3000`; the code uses 30s. The plan lost
+to a measurement — see the decision log.
+
+### Required on submit
+
+`firstName`, `lastName`, and **at least one of** `email` or `phone`. `company` is
+optional in the form and defaults to `[Not provided]` on submit, because Salesforce
+requires it. One zod schema in `src/lib/schemas.ts` serves the form and the route, so
+the two cannot diverge — change the rule there, never in the form.
+
+### Salesforce field mapping
+
+`mapFields(submit)` is pure — no session, no env, no clock — and emits the standard
+Lead fields plus `Description` (raw OCR text), `LeadSource: "Event"` and
+`SnapCard_Client_Id__c`. Empty strings are omitted. The upsert is
+`PATCH /sobjects/Lead/SnapCard_Client_Id__c/{clientId}`: 201 is created, 200 is updated
+(then `GET …?fields=Id` for the Id), `DUPLICATES_DETECTED` is a success with
+`duplicateOf`, anything else goes through `classifyError` into
+`retryable` / `duplicate` / `needs_review`.
+
+Card images attach as a single `ContentVersion` create carrying
+`FirstPublishLocationId: leadId` — that links the file to the Lead on its own, with no
+separate `ContentDocumentLink` call.
+
+### Atlas shape
+
+```
+leads        { clientId: 1 } unique
+             { "salesforce.status": 1, "salesforce.nextAttemptAt": 1 }
+             { capturedBy: 1, createdAt: -1 }
+             { "fields.email": 1 }
+lead_images  { clientId: 1, side: 1 } unique
+app_users    { email: 1 } unique
+```
+
+`leads` holds `{ clientId, capturedBy, fields, rawText, salesforce: { status, leadId?,
+duplicateOf?, attempts, lastError?, nextAttemptAt?, syncedAt?, claimedUntil? },
+backup: { source, savedAt }, createdAt, updatedAt }`. Documents written before
+2026-09-12 also carry a `consent` object; nothing reads it. `PLAN-2` lists `consent` as
+part of the shape — that part of the plan is dead.
+
+Indexes are created by `npm run mongo:indexes`, once per environment.
+
+### The sync cron
+
+`POST /api/sync` with `Authorization: Bearer ${SYNC_SECRET}`, run every 15 minutes by
+`.github/workflows/sync.yml`. It claims work atomically — `findOneAndUpdate` setting
+`salesforce.claimedUntil = now + 60s` — and skips any lead whose claim returns null.
+Backoff on a retryable failure is `min(15m, 30s * 2^attempts)`, capped at 5 attempts.
+The live submit path deliberately has **no** such claim: it only ever upserts leads
+Atlas has not seen, while the cron only touches `failed` ones, so the two never race.
+
+With `SALESFORCE_ENABLED=false` the whole route is a no-op.
+
 ## External services & config
 
 Google OAuth, Gemini API, MongoDB Atlas, Salesforce (off), Hostinger, GitHub Actions.
@@ -133,3 +213,23 @@ Each one was paid for. Do not rediscover them.
   member access; `env.ts` still validates them on the server.
 - **The service worker is disabled in development** — it fights HMR. To exercise the
   PWA locally: `npm run build && npm run start`.
+- **The app sends no `Sforce-Auto-Assign` header, so Salesforce defaults it to TRUE.**
+  Any *active* Lead Assignment Rule therefore runs on every upsert and reassigns the
+  Lead away from the integration user — after which `/admin` and the reconcile job
+  silently stop seeing leads unless that user has **View All** on Lead. Nothing errors;
+  the list just goes quiet. Matters the moment Salesforce is switched back on.
+- **`NEXT_PUBLIC_*` is baked into the browser bundle at build time.** Changing
+  `NEXT_PUBLIC_APP_URL` needs a **redeploy**, not a restart, and the prefix ships the
+  value to every browser — so nothing secret may ever carry it. It is the only
+  build-time variable the app has.
+- **`AUTH_TRUST_HOST=true` is required on Hostinger.** TLS terminates at their proxy,
+  so without it every sign-in fails with `UntrustedHost` — which reads like a Google
+  OAuth misconfiguration and is not.
+- **Node 20.6 is the floor, not 20.0** — `npm run sf:smoke` uses `node --env-file`.
+- **Hostinger needs a Business, Unlimited or Cloud plan.** Premium does not run Node
+  apps at all.
+
+### Serwist caching strategy
+
+App shell precached, `NetworkFirst` for pages, `NetworkOnly` for `/api/*`. API
+responses are never cached — the outbox is the offline story, not the cache.
