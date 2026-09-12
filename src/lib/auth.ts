@@ -1,7 +1,7 @@
 import NextAuth, { type Session } from "next-auth";
 import Google from "next-auth/providers/google";
 import { authConfig } from "./auth.config";
-import { isAllowedProfile, roleFor } from "./auth-rules";
+import { isAllowedProfile } from "./auth-rules";
 import { env } from "./env";
 import { jsonError } from "./http";
 
@@ -32,13 +32,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig.callbacks,
     signIn({ profile }) {
       return isAllowedProfile(profile, env.ALLOWED_EMAIL_DOMAIN);
-    },
-    jwt({ token }) {
-      // Recomputed on every call rather than only at sign-in, so adding someone
-      // to ADMIN_EMAILS takes effect on their next request instead of when
-      // their 30-day token expires.
-      token.role = roleFor(token.email, env.ADMIN_EMAILS);
-      return token;
     },
   },
 });

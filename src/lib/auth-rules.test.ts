@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isAdmin, isAllowedProfile, roleFor } from "./auth-rules";
+import { isAdmin, isAllowedProfile, parseAdminEmails, roleFor } from "./auth-rules";
 
 const DOMAIN = "thinkvibes.com";
 const valid = { email: "rep@thinkvibes.com", email_verified: true, hd: "thinkvibes.com" };
@@ -64,5 +64,32 @@ describe("isAdmin / roleFor", () => {
   it("maps to a role", () => {
     expect(roleFor("boss@thinkvibes.com", admins)).toBe("admin");
     expect(roleFor("rep@thinkvibes.com", admins)).toBe("rep");
+  });
+});
+
+describe("parseAdminEmails", () => {
+  it("splits, trims and lowercases the environment string", () => {
+    expect(parseAdminEmails("Boss@thinkvibes.com, OPS@thinkvibes.com ")).toEqual([
+      "boss@thinkvibes.com",
+      "ops@thinkvibes.com",
+    ]);
+  });
+
+  it("reads an unset or empty variable as nobody", () => {
+    expect(parseAdminEmails(undefined)).toEqual([]);
+    expect(parseAdminEmails(null)).toEqual([]);
+    expect(parseAdminEmails("")).toEqual([]);
+    expect(parseAdminEmails("  ,  ,")).toEqual([]);
+  });
+
+  /*
+   * The regression this whole module exists to prevent: middleware parses
+   * process.env directly and env.ts parses through zod. If those two ever
+   * disagree, the admin gate and the admin nav disagree with them.
+   */
+  it("feeds roleFor the same answer the server computes", () => {
+    const raw = "Boss@thinkvibes.com,ops@thinkvibes.com";
+    expect(roleFor("boss@thinkvibes.com", parseAdminEmails(raw))).toBe("admin");
+    expect(roleFor("rep@thinkvibes.com", parseAdminEmails(raw))).toBe("rep");
   });
 });

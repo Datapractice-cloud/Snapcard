@@ -44,3 +44,17 @@ export function isAdmin(email: string | null | undefined, adminEmails: readonly 
 export function roleFor(email: string | null | undefined, adminEmails: readonly string[]): Role {
   return isAdmin(email, adminEmails) ? "admin" : "rep";
 }
+
+/**
+ * `ADMIN_EMAILS` arrives as one comma-separated string.
+ *
+ * Parsed here rather than only in `env.ts` so the Edge middleware — which
+ * cannot import `env.ts` — derives the identical list. Two parsers for one
+ * variable is the drift that let the admin gate and the admin nav disagree.
+ */
+export function parseAdminEmails(raw: string | null | undefined): string[] {
+  return (raw ?? "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+}

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseAdminEmails } from "./auth-rules";
 
 /**
  * Server-side environment. Never import this from a client component — it
@@ -45,16 +46,11 @@ const envShape = z.object({
     .transform((value) => value === "true"),
 
   ALLOWED_EMAIL_DOMAIN: nonEmpty("ALLOWED_EMAIL_DOMAIN").default("thinkvibes.com"),
-  /** Comma-separated in the environment, a lowercased list here. */
-  ADMIN_EMAILS: z
-    .string()
-    .default("")
-    .transform((raw) =>
-      raw
-        .split(",")
-        .map((email) => email.trim().toLowerCase())
-        .filter(Boolean),
-    ),
+  /**
+   * Comma-separated in the environment, a lowercased list here. Shares its
+   * parser with the Edge middleware so the two can never drift apart.
+   */
+  ADMIN_EMAILS: z.string().default("").transform(parseAdminEmails),
 
   NEXT_PUBLIC_APP_URL: z.url({ message: "NEXT_PUBLIC_APP_URL must be an absolute URL" }),
 

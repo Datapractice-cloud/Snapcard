@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
+import { parseAdminEmails, roleFor } from "./auth-rules";
 
 /**
  * The half of the Auth.js config that is safe on the Edge runtime, because
@@ -31,6 +32,24 @@ export const authConfig = {
     maxAge: 30 * 24 * 60 * 60, // 30 days — a rep signs in before travelling.
   },
   callbacks: {
+    /*
+     * The role is derived here, not in `auth.ts`, because `src/middleware.ts`
+     * builds its own NextAuth instance from this config alone.
+     *
+     * While this lived only in `auth.ts`, the two disagreed: a server render
+     * recomputed the role and drew the Admin link, but middleware read a
+     * `role` claim that nothing had ever written into the cookie and bounced
+     * the click to /scan. Anyone added to ADMIN_EMAILS after their last
+     * sign-in could see Admin and never open it.
+     *
+     * `process.env.ADMIN_EMAILS` is read by static member access for the same
+     * reason as `trustHost` above: on the Edge runtime process.env is not
+     * enumerable, and `env.ts` still validates the value on the server.
+     */
+    jwt({ token }) {
+      token.role = roleFor(token.email, parseAdminEmails(process.env.ADMIN_EMAILS));
+      return token;
+    },
     session({ session, token }) {
       if (session.user) {
         session.user.role = token.role ?? "rep";
