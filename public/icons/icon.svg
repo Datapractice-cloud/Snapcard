@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SnapCard">
+  <rect width="512" height="512" rx="112" fill="#1d4ed8"/>
+  <rect x="116" y="166" width="280" height="180" rx="24" fill="none" stroke="#ffffff" stroke-width="26"/>
+  <circle cx="186" cy="236" r="26" fill="#ffffff"/>
+  <rect x="238" y="218" width="120" height="18" rx="9" fill="#ffffff" opacity="0.9"/>
+  <rect x="238" y="252" width="88" height="14" rx="7" fill="#ffffff" opacity="0.6"/>
+  <rect x="150" y="296" width="208" height="14" rx="7" fill="#ffffff" opacity="0.6"/>
+</svg>

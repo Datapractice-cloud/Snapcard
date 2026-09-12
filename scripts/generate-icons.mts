@@ -182,6 +182,38 @@ function crc32(buffer: Buffer): number {
   return (c ^ 0xffffffff) >>> 0;
 }
 
+/* ---- ICO, so /favicon.ico is the SnapCard mark and not a stray default ---- */
+
+/**
+ * Windows ICO wrapping PNG frames rather than BMP: every browser still in use
+ * reads PNG-in-ICO, and it means reusing the encoder above instead of writing
+ * a second one for a format with upside-down rows.
+ */
+function encodeIco(frames: { size: number; png: Buffer }[]): Buffer {
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(1, 2); // 1 = icon
+  header.writeUInt16LE(frames.length, 4);
+
+  let offset = 6 + frames.length * 16;
+  const entries: Buffer[] = [];
+
+  for (const frame of frames) {
+    const entry = Buffer.alloc(16);
+    // 0 means 256 in this field; none of our frames are that large, but the
+    // rule is the reason the byte is written rather than assigned directly.
+    entry[0] = frame.size >= 256 ? 0 : frame.size;
+    entry[1] = frame.size >= 256 ? 0 : frame.size;
+    entry.writeUInt16LE(1, 4); // colour planes
+    entry.writeUInt16LE(32, 6); // bits per pixel
+    entry.writeUInt32LE(frame.png.length, 8);
+    entry.writeUInt32LE(offset, 12);
+    entries.push(entry);
+    offset += frame.png.length;
+  }
+
+  return Buffer.concat([header, ...entries, ...frames.map((frame) => frame.png)]);
+}
+
 /* ---- Write them ---- */
 
 const out = "public/icons";
@@ -200,3 +232,12 @@ for (const [name, options] of files) {
   writeFileSync(`${out}/${name}`, png);
   console.log(`${out}/${name}  ${options.size}x${options.size}  ${(png.length / 1024).toFixed(1)} KB`);
 }
+
+/*
+ * The browser tab and anything that falls back to /favicon.ico. Written into
+ * src/app so Next serves it by its file convention; without it the tab shows
+ * whatever favicon create-next-app left behind, which is not this app.
+ */
+const ico = encodeIco([16, 32, 48].map((size) => ({ size, png: render({ size }) })));
+writeFileSync("src/app/favicon.ico", ico);
+console.log("  src/app/favicon.ico");

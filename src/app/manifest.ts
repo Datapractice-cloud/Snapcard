@@ -18,6 +18,12 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#f7f8fa",
     theme_color: "#f7f8fa",
     icons: [
+      /*
+       * The vector first, so a launcher that understands SVG renders the mark
+       * at whatever density the device has. The PNGs stay because Android and
+       * iOS both still fall back to them.
+       */
+      { src: "/icons/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       // Lets Android crop to its own shape without clipping the mark.

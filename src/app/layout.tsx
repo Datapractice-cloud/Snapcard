@@ -24,7 +24,13 @@ export const metadata: Metadata = {
   // Standalone on iOS, and the title used under the home-screen icon.
   appleWebApp: { capable: true, title: "SnapCard", statusBarStyle: "default" },
   icons: {
-    icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    // Declared explicitly, which overrides Next's file convention — so the
+    // SVG has to be listed here or nothing links it. src/app/favicon.ico still
+    // covers the browsers and crawlers that ask for /favicon.ico by name.
+    icon: [
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   // Phone numbers on a card are data, not links to dial.
