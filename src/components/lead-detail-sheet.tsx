@@ -309,7 +309,7 @@ export function LeadDetailSheet({ clientId, fallback, onClose, onDeleted }: Prop
             </AlertDialogCancel>
             <AlertDialogAction
               size="tap"
-              variant="destructive"
+              variant="destructive-solid"
               disabled={deleting}
               onClick={(event) => {
                 // The default closes the dialog immediately; the request has
@@ -317,7 +317,6 @@ export function LeadDetailSheet({ clientId, fallback, onClose, onDeleted }: Prop
                 event.preventDefault();
                 void remove();
               }}
-              className="bg-bad text-white hover:bg-bad/90"
             >
               {deleting ? "Deleting…" : "Delete lead"}
             </AlertDialogAction>

@@ -17,6 +17,11 @@ const buttonVariants = cva(
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+        // The soft `destructive` above is right for a button that merely opens
+        // a confirmation. The one that actually destroys something has to be
+        // solid, or it reads as disabled next to the Cancel beside it.
+        "destructive-solid":
+          "bg-bad text-white hover:bg-[color-mix(in_oklch,var(--bad),black_10%)] focus-visible:border-bad/40 focus-visible:ring-bad/30",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
