@@ -246,6 +246,21 @@ export type LeadDetail = {
   sides: ("front" | "back")[];
 };
 
+/**
+ * Removes a lead and the photographs of the card it came from.
+ *
+ * The images go with it: they are worthless on their own, and keeping a photo
+ * of someone's business card after their record was deleted is the opposite of
+ * what deleting is for. Returns false when there was no such lead.
+ */
+export async function deleteLeadFromAtlas(clientId: string): Promise<boolean> {
+  return withMongo(async (db) => {
+    const result = await db.collection<LeadDoc>("leads").deleteOne({ clientId });
+    await db.collection<LeadImageDoc>("lead_images").deleteMany({ clientId });
+    return result.deletedCount > 0;
+  });
+}
+
 /** The whole lead, plus which card sides have an image stored. */
 export async function findLeadDetail(clientId: string): Promise<LeadDetail | null> {
   const doc = await withMongo((db) => db.collection<LeadDoc>("leads").findOne({ clientId }));

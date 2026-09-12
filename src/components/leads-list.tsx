@@ -266,6 +266,9 @@ export function LeadsList() {
         clientId={open?.clientId ?? null}
         fallback={open?.local ?? null}
         onClose={() => setOpen(null)}
+        // Dexie's live query drops the local row on its own; the server list
+        // is a snapshot and has to be asked again.
+        onDeleted={() => void load()}
       />
     </div>
   );

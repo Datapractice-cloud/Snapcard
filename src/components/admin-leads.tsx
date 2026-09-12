@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Buildings } from "@phosphor-icons/react/dist/csr/Buildings";
 import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
@@ -40,6 +41,7 @@ const FILTERS = [
 type Filter = (typeof FILTERS)[number]["key"];
 
 export function AdminLeads({ leads, capped }: Props) {
+  const router = useRouter();
   const [open, setOpen] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -211,7 +213,12 @@ export function AdminLeads({ leads, capped }: Props) {
         </div>
       )}
 
-      <LeadDetailSheet clientId={open} onClose={() => setOpen(null)} />
+      <LeadDetailSheet
+        clientId={open}
+        onClose={() => setOpen(null)}
+        // The table is server-rendered, so the page has to be asked again.
+        onDeleted={() => router.refresh()}
+      />
     </div>
   );
 }
