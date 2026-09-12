@@ -190,8 +190,16 @@ describe("leadSubmitSchema", () => {
     expect(issuePaths(leadSubmitSchema.safeParse(submit({ clientId: "lead-1" })))).toEqual(["clientId"]);
   });
 
-  it("requires at least one image and allows at most two", () => {
-    expect(leadSubmitSchema.safeParse(submit({ images: [] })).success).toBe(false);
+  /*
+   * Regression: an empty list used to be rejected, which made the capture
+   * step's "Fill in manually instead" button a dead end — it threw on save and
+   * reported it as a phone-storage failure.
+   */
+  it("accepts a lead with no photo, for the manual-entry path", () => {
+    expect(leadSubmitSchema.safeParse(submit({ images: [] })).success).toBe(true);
+  });
+
+  it("allows at most two images", () => {
     expect(
       leadSubmitSchema.safeParse(
         submit({

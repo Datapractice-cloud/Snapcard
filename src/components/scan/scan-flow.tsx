@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ZodError } from "zod";
 import { compressImage, toDataUrl } from "@/lib/client/compress";
 import { addToOutbox, processOutbox } from "@/lib/client/outbox";
 import { EMPTY_LEAD_FIELDS, leadSubmitSchema, type CardSide, type LeadFields } from "@/lib/schemas";
@@ -157,8 +158,18 @@ export function ScanFlow() {
         // Not awaited: the Saved step subscribes to the result and updates the
         // badge in place whenever it lands.
         void processOutbox();
-      } catch {
-        setError("The lead could not be stored on this phone. Try saving again.");
+      } catch (cause) {
+        /*
+         * A rejected payload and a failed write are different problems and need
+         * different words. Saying "try again" to someone whose form will never
+         * validate sends them round the same loop for ever — which is exactly
+         * what happened while an image was mandatory.
+         */
+        setError(
+          cause instanceof ZodError
+            ? (cause.issues[0]?.message ?? "Something in the form is not valid. Check the fields above.")
+            : "The lead could not be stored on this phone. Try saving again.",
+        );
       } finally {
         setSaving(false);
       }

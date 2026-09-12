@@ -124,9 +124,19 @@ export const leadSubmitSchema = z.object({
   clientId: z.uuid(),
   fields: leadFieldsSubmitSchema.transform(withCompanyFallback),
   rawText: z.string().max(MAX_RAW_TEXT_CHARS).default(""),
+  /*
+   * May be empty. The capture step offers "Fill in manually instead", which is
+   * the whole point of that button — a card too glossy, too dark or too damaged
+   * to photograph, or OCR that will not read it. Requiring an image made that
+   * path throw on save, so every manually typed lead was lost with a message
+   * blaming the phone's storage.
+   *
+   * A lead with no photo is still a lead, and priority 1 is that a lead is
+   * never lost. Both stores already handle an empty list: `saveImages` returns
+   * early and `attachImage` is simply never called.
+   */
   images: z
     .array(leadImageSchema)
-    .min(1, "Attach at least the front of the card.")
     .max(2)
     .refine(
       (images) => new Set(images.map((image) => image.side)).size === images.length,

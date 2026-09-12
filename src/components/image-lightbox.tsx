@@ -44,7 +44,7 @@ export function ImageLightbox({ src, alt, onClose }: Props) {
       aria-label={alt}
       // Clicking the backdrop closes; clicking the image itself does not.
       onClick={onClose}
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-[#0c0e12]/92 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-[var(--scrim)]/92 p-4 backdrop-blur-sm"
     >
       <button
         type="button"

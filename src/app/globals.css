@@ -40,12 +40,16 @@
   --color-brand: var(--brand);
   --color-brand-strong: var(--brand-strong);
   --color-brand-soft: var(--brand-soft);
+  --color-brand-line: var(--brand-line);
+  --color-brand-deep: var(--brand-deep);
   --color-ok: var(--ok);
   --color-ok-soft: var(--ok-soft);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
+  --color-warn-line: var(--warn-line);
   --color-bad: var(--bad);
   --color-bad-soft: var(--bad-soft);
+  --color-scrim: var(--scrim);
 
   /* Cobalt radii: inputs 10, buttons 12, cards 14 */
   --radius-sm: 10px;
@@ -86,6 +90,19 @@
   --warn-soft: #fffbeb;
   --bad: #b91c1c;
   --bad-soft: #fef2f2;
+
+  /*
+   * The other halves of the soft pairs above. Cobalt uses a tinted border and
+   * a darker text colour on every `*-soft` panel, and both were being written
+   * as raw hex in two files each — so a change to one notice never reached the
+   * other. They live here for the same reason `--brand-soft` does.
+   */
+  --brand-line: #d7e3fb; /* border on --brand-soft */
+  --brand-deep: #1e3a8a; /* text on --brand-soft */
+  --warn-line: #f3e4c4; /* border on --warn-soft */
+
+  /* Full-bleed overlay behind the camera sheet and the image lightbox. */
+  --scrim: #0c0e12;
 
   --background: var(--bg);
   --foreground: var(--text);

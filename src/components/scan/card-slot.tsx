@@ -128,7 +128,7 @@ export function CardSlot({ label, hint, required, shot, busy, onPick, onClear }:
           <Button
             type="button"
             variant="ghost"
-            className="mt-1.5 h-10 w-full text-[13px] font-bold text-muted-foreground"
+            className="mt-1.5 h-12 w-full text-[13px] font-bold text-muted-foreground"
             onClick={() => galleryRef.current?.click()}
             disabled={busy}
           >

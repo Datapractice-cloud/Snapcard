@@ -61,7 +61,7 @@ export function ReviewStep({
       </div>
 
       {fromScan && (
-        <div className="mb-[18px] flex items-start gap-2.5 rounded-[10px] border border-[#d7e3fb] bg-brand-soft px-3.5 py-3 text-[13px] text-[#1e3a8a]">
+        <div className="mb-[18px] flex items-start gap-2.5 rounded-[10px] border border-[var(--brand-line)] bg-brand-soft px-3.5 py-3 text-[13px] text-[var(--brand-deep)]">
           <MagicWand size={17} weight="bold" className="mt-px shrink-0" />
           <p>We filled these in from the card. Anything we could not read is blank — please check before saving.</p>
         </div>

@@ -26,10 +26,14 @@ import {
 export function mapFields(submit: LeadSubmit): Record<string, string> {
   const { fields } = submit;
 
+  /*
+   * `SnapCard_Client_Id__c` is deliberately NOT here. It is the upsert key and
+   * travels in the URL path; Salesforce rejects the whole write with
+   * "INVALID_FIELD: The SnapCard_Client_Id__c field should not be specified in
+   * the sobject data" if it also appears in the body. Sending it looks harmless
+   * and fails 100% of the time — every lead comes back needs_review.
+   */
   const record: Record<string, string> = {
-    // The external id. Every write is an upsert on this, which is what makes a
-    // double-tapped save one Lead instead of two.
-    SnapCard_Client_Id__c: submit.clientId,
     LeadSource: "Event",
   };
 
