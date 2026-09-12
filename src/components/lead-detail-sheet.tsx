@@ -194,7 +194,7 @@ export function LeadDetailSheet({ clientId, fallback, onClose }: Props) {
 
               {shown.rawText && (
                 <section>
-                  <h3 className="mb-2 text-[12.5px] font-extrabold">Card text</h3>
+                  <h3 className="mb-2 text-[12.5px] font-extrabold">Notes</h3>
                   <pre className="mono rounded-[10px] bg-surface-2 p-3 text-xs whitespace-pre-wrap">
                     {shown.rawText}
                   </pre>

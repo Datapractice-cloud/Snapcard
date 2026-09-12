@@ -140,7 +140,7 @@ export function ReviewStep({
       </div>
 
       <details className="mt-[18px] rounded-[10px] border border-line bg-surface-2 px-3.5 py-3">
-        <summary className="cursor-pointer text-[12.5px] font-extrabold">Card text</summary>
+        <summary className="cursor-pointer text-[12.5px] font-extrabold">Notes</summary>
         <p className="mt-1.5 text-xs text-subtle">
           Everything we read off the card. Saved to the lead so an admin can check a field that looks wrong.
         </p>
@@ -149,7 +149,7 @@ export function ReviewStep({
           onChange={(event) => setText(event.target.value)}
           rows={6}
           className="mono mt-2 text-[13px]"
-          aria-label="Card text"
+          aria-label="Notes"
         />
       </details>
 
