@@ -6,6 +6,45 @@
 > the commit history. Each is dated and anchored to the commit that carried it, so the
 > ordering is real even though the writing is after the fact.
 
+## 2026-09-12 — Hostinger deploys from `main`, and the docs are wrong
+
+- **Decision / fact:** Hostinger is connected to **`main`**. Pushing to `main` is a
+  production deploy to a live, in-use app. `production` (`efab334`) deploys nothing.
+- **Why it is recorded here:** `README.md`'s Branches table and `SETUP.md` §3 both say
+  Hostinger deploys `production`. This brain inherited that and produced a plan built on
+  it. The user corrected it. Believing the docs costs a wrong deployment plan every time.
+- **Impact:** every merge to `main` needs the care of a release, not a merge. The safe
+  gate is a **pull request** into `main` — `ci.yml` fires on `pull_request: [main]`, so
+  the full Node 20 suite runs with nothing merged and nothing deployed. Worth knowing
+  that local development is Node **v24.16.0** against Hostinger's **Node 20**, and CI
+  had never run on `salesforce-connect` at all.
+- **Left undecided:** whether to point Hostinger at `production` as the docs intend, or
+  keep `main` and update the docs. The docs now describe reality either way.
+
+## 2026-09-12 — Salesforce file storage is not a constraint (corrects Session 5)
+
+- **Decision:** keep attaching card images to Salesforce Leads. No code change.
+- **Why:** measured, after an earlier recommendation based on a guess. Real images in
+  Atlas are a median of **65 KB** and **58 KB per lead**, not the 150-400 KB assumed —
+  so 17.8 MB of free file storage holds roughly **315 leads**, not ~35.
+- **Corrects:** the Session 5 advice to stop calling `attachImage`. That was wrong and
+  was withdrawn before anything was changed.
+- **Impact:** none in code. The lesson is the point — an estimate was about to drive a
+  design change, and one query against real data replaced it. Data Storage sits at 67%
+  but that is Developer Edition sample data; 6 Leads account for ~12 KB of it.
+
+## 2026-09-12 — `/api/leads/backup` is unnecessary, not missing
+
+- **Decision:** do not build it. Remove it from the backlog as a gap.
+- **Why:** the `synced` + backup-`failed` case was recorded as depending on a route that
+  was never built. It does not. `outbox.ts` re-posts the whole payload to `/api/leads`,
+  and because the Salesforce upsert keys on `clientId` it cannot create a duplicate — so
+  Atlas gets another attempt and the item clears. It self-heals on the 15 minute timer.
+- **Rejected:** building the dedicated route — it would only save one redundant
+  Salesforce round trip on a path that is already rare and already correct.
+- **Impact:** one fewer thing standing between this app and the event. `PLAN-2` Task 3
+  can be ignored.
+
 ## 2026-09-12 — Google sign-in is the only way in; password accounts deleted
 
 - **Decision:** SnapCard has exactly one sign-in path — Google, restricted to

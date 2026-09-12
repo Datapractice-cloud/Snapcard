@@ -65,7 +65,7 @@ does not run Node apps.
 
 1. DNS: add `scan` subdomain pointing at the hosting plan.
 2. hPanel → Websites → Add Website → Node.js web app → Import Git repository
-   → select the repo → branch `production` → framework Next.js → Node 20 or
+   → select the repo → branch `main` → framework Next.js → Node 20 or
    newer. `package.json` declares `engines.node >= 20.6.0`; 20.6 is the floor
    because `npm run sf:smoke` uses `node --env-file`.
    Build command `npm run build`, start command `npm run start`.
@@ -74,7 +74,7 @@ does not run Node apps.
    browser downloads, so it is fixed at build time — changing one later needs a
    redeploy, not a restart, and it must never hold a secret.
 4. Deploy. Then: force HTTPS, confirm SSL is active, purge CDN cache.
-5. After any change to env vars or the `production` branch: Redeploy, then
+5. After any change to env vars or to `main`: Redeploy, then
    purge CDN cache again.
 6. For Phase 2 cron you can use GitHub Actions (default) or hPanel cron with
    `curl -fsS -X POST -H "Authorization: Bearer <SYNC_SECRET>" https://scan.thinkvibes.com/api/sync`.
@@ -108,7 +108,7 @@ Phase 2 only — leave unset until the Atlas work lands:
 |---|---|---|---|
 | `SYNC_SECRET` | no | **yes** | `openssl rand -hex 32`. Also add to GitHub repo secrets. |
 | `MONGODB_URI` | no | **yes** | Atlas SRV connection string |
-| `MONGODB_DB` | no | no | `snapcard` |
+| `MONGODB_DB` | no | no | `snapcard1` — **not** `snapcard`, which belongs to another project and blocks the unique index |
 
 `NEXT_PUBLIC_APP_URL` is the only build-time variable, and it holds nothing
 secret — which is the rule: if a value must stay private, it must not be
@@ -119,10 +119,12 @@ secret — which is the rule: if a value must stay private, it must not be
 1. Create a project and a **Free** cluster in the region closest to the
    Hostinger server (check the server location in hPanel).
 2. Database Access: user `snapcard_app`, role **readWrite** on database
-   `snapcard` only, long random password.
+   `snapcard1` only, long random password. (`snapcard` belongs to a different
+   project; scoping the user to it gives a working user pointed at the wrong
+   database.)
 3. Network Access: try the Hostinger outbound IP first; if connections
    fail, use `0.0.0.0/0` (the strong password + scoped user is the control).
-4. Copy the SRV connection string → `MONGODB_URI`, set `MONGODB_DB=snapcard`.
+4. Copy the SRV connection string → `MONGODB_URI`, set `MONGODB_DB=snapcard1`.
 5. Generate `SYNC_SECRET` with `openssl rand -hex 32`; add it to hPanel env
    and to GitHub repo secrets along with `APP_URL`.
 

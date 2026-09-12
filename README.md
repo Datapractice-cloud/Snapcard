@@ -1,8 +1,9 @@
 # SnapCard
 
 A PWA for photographing business cards at events. Gemini extracts the fields,
-the rep reviews them and confirms consent, and the lead is upserted into
-Salesforce. Leads queue on the phone, so a lost signal never loses one.
+the rep reviews and corrects them, and the lead is upserted into Salesforce and
+mirrored to MongoDB Atlas. Leads queue on the phone, so a lost signal never
+loses one.
 
 Read [`CLAUDE.md`](./CLAUDE.md) first — it is the source of truth for
 architecture, the Salesforce contract, the API contract and the design.
@@ -48,20 +49,25 @@ npm run start`.
 
 | Branch | Purpose |
 |---|---|
-| `main` | Where work lands |
-| `production` | What Hostinger deploys. Nothing else watches it. |
+| `main` | Where work lands — **and what Hostinger deploys** |
+| `production` | Unused. Left behind when the deploy was pointed at `main`. |
 
-Deploying is merging:
+> **Pushing to `main` deploys to the live app.** Treat every merge as a release.
+> This page used to say `production` was the deployed branch; it is not, and believing
+> that produces a deployment plan that quietly does nothing.
+
+So there is no separate deploy step — merging into `main` *is* the deploy. Get CI to run
+**before** that happens by opening a pull request rather than pushing straight:
 
 ```bash
-git checkout production
-git merge main
-git push
+git push origin <your-branch>
+# then on GitHub: New pull request, <your-branch> -> main
 ```
 
-CI (`.github/workflows/ci.yml`) runs typecheck, lint, tests and a build on
-every push and PR to both branches, on **Node 20** — the version Hostinger
-runs, not the one you develop on.
+`ci.yml` runs typecheck, lint, tests and a build on **Node 20** — the version
+Hostinger runs, not the one you develop on. It fires on pushes and pull requests to
+`main` and `production`, and **not** on feature branches, which is exactly why the pull
+request above matters: it is the only way to get the suite run before a deploy.
 
 ## Deploying to Hostinger
 
@@ -69,7 +75,7 @@ Needs a Business, Unlimited or Cloud plan; Premium does not run Node apps.
 
 1. **DNS** — point the `scan` subdomain at the hosting plan.
 2. **hPanel** → Websites → Add Website → **Node.js web app** → Import Git
-   repository → this repo → branch **`production`** → framework Next.js →
+   repository → this repo → branch **`main`** (see Branches above) → framework Next.js →
    **Node 20 or newer**.
    Build command `npm run build`, start command `npm run start`.
 3. **Environment variables** — add every one from the table in
@@ -87,8 +93,9 @@ Needs a Business, Unlimited or Cloud plan; Premium does not run Node apps.
    bare `…apps.googleusercontent.com` value, not a URL.
 5. **Deploy.** Then force HTTPS, confirm SSL is active, and purge the CDN cache.
 
-Redeploy and purge the CDN cache again after any change to env vars or to
-`production`.
+Redeploy and purge the CDN cache again after any change to env vars or to `main`.
+Environment variables are read once at server start (`src/lib/env.ts` caches them), so a
+changed value does nothing until the app restarts.
 
 ### After the first deploy
 

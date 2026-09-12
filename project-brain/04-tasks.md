@@ -35,17 +35,16 @@
 
 ## Next
 
-- [ ] Fix `SETUP.md`: §3 and §4 both say `MONGODB_DB=snapcard` and scope the Atlas user
-      to database `snapcard`. The real database is `snapcard1` — following §4 as
-      written builds a working user pointed at the wrong database.
-- [ ] Fix `README.md`: it still says the rep "confirms consent". Consent was removed.
 - [ ] Delete the three seeded fake leads still in Atlas (Meera Iyer, Daniel Okafor,
       Sofia Rossi)
-- [ ] Deploy: merge `main` into `production`. `production` is well behind `main`, and
-      merging **is** the deploy — only when the user asks.
-- [ ] Set the Hostinger environment variables (every one in `SETUP.md` §3, before the
-      first build — `AUTH_TRUST_HOST=true` and `NEXT_PUBLIC_APP_URL` are the two that
-      get missed)
+- [ ] **User:** confirm `MONGODB_URI` is set in hPanel. If it is unset while Salesforce
+      is off, the live app stores leads nowhere and they pile up in reps' outboxes.
+- [ ] **Deploy = merge to `main`** (Hostinger deploys `main`, not `production`). Open a
+      PR from the feature branch first so `ci.yml` runs the Node 20 suite without
+      deploying, then merge on green.
+- [ ] After deploying: set `SALESFORCE_ENABLED=true` in hPanel and **restart** —
+      `env.ts` caches at first read — then read the sync workflow's curl response body.
+      `{"skipped":"salesforce_disabled"}` means the flag did not take.
 - [ ] Add the Google OAuth redirect URI for `snapcard.thinkvibes-exam.com`
 
 ## Later
@@ -83,14 +82,17 @@ Gated on the org getting `SnapCard_Client_Id__c` and the FLS grants, then
       active, or `/admin` and reconcile will silently stop seeing reassigned leads
 - [ ] `POST /api/reconcile` + `.github/workflows/reconcile.yml` (`PLAN-2` Task 5) —
       Salesforce -> Atlas backfill
-- [ ] `POST /api/leads/backup` (`PLAN-2` Task 3) — the phone's `backupOnly` retry path,
-      reachable only when Salesforce succeeds and Atlas fails
 - [ ] Per-lead "Retry now" button + `POST /api/leads/[clientId]/retry` (`PLAN-2` Task 6)
 
 ## Done
 
 <!-- - [x] YYYY-MM-DD — task -->
 
+- [x] 2026-09-12 — Corrected the deploy topology in `README.md` and `SETUP.md`
+      (Hostinger deploys `main`), fixed the `snapcard1` database name and dropped the
+      stale consent line
+- [x] 2026-09-12 — `SYNC_SECRET` generated and `/api/sync` verified (401 / 200); the
+      server-side retry the outbox depends on now actually works
 - [x] 2026-09-12 — Set `IP Relaxation` to "Relax IP restrictions" on the External
       Client App, so the first write from Hostinger is not refused as bad credentials.
       Unverifiable from the dev machine, whose IP was already allowed.

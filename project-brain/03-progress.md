@@ -41,8 +41,21 @@ in the repo; `02-decisions.md` records exactly where they are now wrong.
 
 ## Start here next time
 
-**Salesforce, not user management.** Writes are proven; what remains is everything
-between "it works on this laptop" and "it works at the event". In order:
+**Deploy, carefully.** Hostinger deploys **`main`**, and the app is in use — so pushing
+to `main` is a release. `main` is at `d0cacc8`, which still has the manual-entry bug
+reps are hitting today. In order:
+
+1. **Confirm `MONGODB_URI` in hPanel.** If unset while Salesforce is off, the live app
+   stores leads nowhere and they pile up in reps' outboxes.
+2. **Open a PR** `salesforce-connect` -> `main`. `ci.yml` fires on pull requests to
+   `main`, so this is the first Node 20 validation of these 12 commits — local is Node
+   v24.16.0 — and it runs without deploying. Merge only on green.
+3. **Merge**, which deploys. Then the four `README.md` curl checks and a CDN purge.
+4. **Only then** `SALESFORCE_ENABLED=true` and restart, and read the sync workflow's
+   response body to confirm it is not a no-op.
+5. **Field test on real phones** — never done, and it is the actual gap.
+
+Older Salesforce notes, still valid:
 
 1. **Relax or whitelist the IP** on the External Client App — it is set to *Enforce IP
    restrictions*, and Hostinger's outbound IP differs from the dev machine's, so the
