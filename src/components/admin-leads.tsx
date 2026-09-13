@@ -33,7 +33,16 @@ const CSV_COLUMNS: CsvColumn<EventLead>[] = [
 ];
 
 /** Lowercased for mid-sentence use; the pills keep their own capitalisation. */
-const RANGE_LABEL: Record<RangeKey, string> = { today: "today", "7": "the last 7 days", all: "any range" };
+/*
+ * Carries its own preposition, so the sentence reads in every case: "No leads
+ * today", "No leads in the last 7 days". "all" never reaches this — an empty
+ * All means there are no leads at all, which gets its own wording.
+ */
+const RANGE_LABEL: Record<RangeKey, string> = {
+  today: "today",
+  "7": "in the last 7 days",
+  all: "",
+};
 
 /** The filters an admin actually wants, in the order they would ask for them. */
 const FILTERS = [
@@ -212,7 +221,7 @@ export function AdminLeads({ leads, capped }: Props) {
               ? "Nothing in this view"
               : range === "all"
                 ? "No leads yet"
-                : `No leads in ${RANGE_LABEL[range]}`}
+                : `No leads ${RANGE_LABEL[range]}`}
           </p>
           {/*
            * An empty Today with leads behind it is the exact thing that read as

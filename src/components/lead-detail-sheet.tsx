@@ -71,7 +71,8 @@ export function LeadDetailSheet({ clientId, fallback, onClose, onDeleted }: Prop
   const [lead, setLead] = useState<LeadDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [localOnly, setLocalOnly] = useState(false);
-  const [zoomed, setZoomed] = useState<string | null>(null);
+  /** Index into the card sides, so the lightbox can move between them. */
+  const [zoomed, setZoomed] = useState<number | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -196,11 +197,11 @@ export function LeadDetailSheet({ clientId, fallback, onClose, onDeleted }: Prop
                 <section>
                   <h3 className="mb-2 text-[12.5px] font-extrabold">Card</h3>
                   <div className="grid gap-2.5 sm:grid-cols-2">
-                    {shown.sides.map((side) => (
+                    {shown.sides.map((side, sideIndex) => (
                       <figure key={side}>
                         <button
                           type="button"
-                          onClick={() => setZoomed(`/api/images/${shown.clientId}/${side}`)}
+                          onClick={() => setZoomed(sideIndex)}
                           aria-label={`Enlarge the ${side} of the card`}
                           className="press block w-full overflow-hidden rounded-[10px] border border-line bg-surface-2 hover:border-line-strong"
                         >
@@ -284,7 +285,15 @@ export function LeadDetailSheet({ clientId, fallback, onClose, onDeleted }: Prop
         </div>
       </SheetContent>
 
-      <ImageLightbox src={zoomed} alt={`Card for ${name}`} onClose={() => setZoomed(null)} />
+      <ImageLightbox
+        images={(shown?.sides ?? []).map((side) => ({
+          src: `/api/images/${shown?.clientId}/${side}`,
+          label: side,
+        }))}
+        startIndex={zoomed}
+        alt={`Card for ${name}`}
+        onClose={() => setZoomed(null)}
+      />
 
       {/*
         * Radix AlertDialog: modal, focus-trapped, and Escape cancels rather
