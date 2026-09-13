@@ -6,6 +6,26 @@
 > the commit history. Each is dated and anchored to the commit that carried it, so the
 > ordering is real even though the writing is after the fact.
 
+## 2026-09-13 — Date ranges are filtered in the browser, and shared by both lists
+
+- **Decision:** `RANGES` (**Today / 7 days / All**) and `startOf()` live in
+  `src/lib/lead-range.ts` and are used by both `/leads` and `/admin`. Filtering happens
+  **client-side on both**. The server query no longer restricts by date.
+- **Why:** `/admin` cut at midnight *on the server*, which is Hostinger's day, not the
+  admin's — for IST that hid everything captured before 05:30, and it made yesterday's
+  leads unreachable entirely. Moving the filter into the browser fixes the timezone for
+  free, because there the day boundary belongs to whoever is looking. `/leads` already
+  worked this way and already had the pills; this is mostly a lift, not a new feature.
+- **Rejected:** passing a UTC offset or a computed cutoff to the server (plumbing, and a
+  round trip per pill); a URL search param (same); keeping two separate implementations
+  (they would drift, and one was already wrong).
+- **Impact:** `/leads` loses its "30 days" pill — All covers it. `/admin` defaults to
+  Today, `/leads` to All, and both defaults are deliberate and commented. The Salesforce
+  fallback query moved from `CreatedDate = TODAY` to `LAST_N_DAYS:30` so the pills have
+  something to filter when Atlas is not configured, and `ADMIN_LIMIT` went 200 -> 500.
+- **Note:** `/admin`'s empty state now names the range and says how many leads sit
+  outside it. An empty table with data just behind it is what got reported as lost leads.
+
 ## 2026-09-12 — Hostinger deploys from `main`, and the docs are wrong
 
 - **Decision / fact:** Hostinger is connected to **`main`**. Pushing to `main` is a

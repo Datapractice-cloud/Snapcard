@@ -11,6 +11,7 @@ import { Users } from "@phosphor-icons/react/dist/csr/Users";
 import { Button } from "@/components/ui/button";
 import { LeadDetailSheet } from "@/components/lead-detail-sheet";
 import { toCsv, type CsvColumn } from "@/lib/csv";
+import { RANGES, startOf, type RangeKey } from "@/lib/lead-range";
 import { cn } from "@/lib/utils";
 import type { EventLead } from "@/lib/salesforce/lead";
 
@@ -31,6 +32,9 @@ const CSV_COLUMNS: CsvColumn<EventLead>[] = [
   { header: "Captured by", value: (lead) => lead.capturedBy ?? "" },
 ];
 
+/** Lowercased for mid-sentence use; the pills keep their own capitalisation. */
+const RANGE_LABEL: Record<RangeKey, string> = { today: "today", "7": "the last 7 days", all: "any range" };
+
 /** The filters an admin actually wants, in the order they would ask for them. */
 const FILTERS = [
   { key: "all", label: "All" },
@@ -44,28 +48,59 @@ export function AdminLeads({ leads, capped }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
+  /*
+   * Today by default: during an event that is the question an admin is asking.
+   * `/leads` defaults to "all" instead, for the reason in lead-range.ts.
+   */
+  const [range, setRange] = useState<RangeKey>("today");
 
-  const stats = useMemo(() => {
-    const reps = new Set(leads.map((lead) => lead.capturedBy).filter(Boolean));
-    return {
-      total: leads.length,
-      // A lead nobody can contact is the one an admin has to chase.
-      contactable: leads.filter((lead) => lead.email || lead.phone).length,
-      companies: new Set(leads.map((lead) => lead.company).filter(Boolean)).size,
-      reps: reps.size,
-      attention: leads.filter((lead) => lead.status === "failed" || lead.status === "needs_review").length,
-    };
+  /*
+   * Dates are filtered here rather than in the query, so the day boundary is
+   * the admin's own. The server used to cut at its midnight, which was
+   * Hostinger's day and hid yesterday entirely.
+   */
+  const inRange = useMemo(() => {
+    const from = startOf(range);
+    if (from === null) return leads;
+    return leads.filter((lead) => new Date(lead.createdAt).getTime() >= from);
+  }, [leads, range]);
+
+  /** Per-range totals for the pill badges, so a count is never a surprise. */
+  const rangeCounts = useMemo(() => {
+    const entries = RANGES.map((option) => {
+      const from = startOf(option.key);
+      const n =
+        from === null
+          ? leads.length
+          : leads.filter((lead) => new Date(lead.createdAt).getTime() >= from).length;
+      return [option.key, n] as const;
+    });
+    return Object.fromEntries(entries) as Record<RangeKey, number>;
   }, [leads]);
+
+  // Derived from the range, not the whole list, or the tiles would contradict
+  // the table sitting underneath them.
+  const stats = useMemo(() => {
+    const reps = new Set(inRange.map((lead) => lead.capturedBy).filter(Boolean));
+    return {
+      total: inRange.length,
+      // A lead nobody can contact is the one an admin has to chase.
+      contactable: inRange.filter((lead) => lead.email || lead.phone).length,
+      companies: new Set(inRange.map((lead) => lead.company).filter(Boolean)).size,
+      reps: reps.size,
+      attention: inRange.filter((lead) => lead.status === "failed" || lead.status === "needs_review").length,
+    };
+  }, [inRange]);
 
   const shown = useMemo(() => {
     if (filter === "saved") {
-      return leads.filter((lead) => lead.status !== "failed" && lead.status !== "needs_review");
+      return inRange.filter((lead) => lead.status !== "failed" && lead.status !== "needs_review");
     }
     if (filter === "attention") {
-      return leads.filter((lead) => lead.status === "failed" || lead.status === "needs_review");
+      return inRange.filter((lead) => lead.status === "failed" || lead.status === "needs_review");
     }
-    return leads;
-  }, [leads, filter]);
+    return inRange;
+  }, [inRange, filter]);
 
   function download() {
     // Exports what is on screen, so a filtered view exports the filtered set.
@@ -76,7 +111,8 @@ export function AdminLeads({ leads, capped }: Props) {
 
     const link = document.createElement("a");
     link.href = url;
-    link.download = `snapcard-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    // The range is in the name, or two exports overwrite each other.
+    link.download = `snapcard-leads-${range}-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
 
     URL.revokeObjectURL(url);
@@ -100,6 +136,27 @@ export function AdminLeads({ leads, capped }: Props) {
         </Stat>
         <Stat icon={<Buildings size={15} weight="bold" />} label="Companies" value={stats.companies} />
         <Stat icon={<UserCircle size={15} weight="bold" />} label="Reps" value={stats.reps} />
+      </div>
+
+      {/* Date first, then status: the two rows read as one control. */}
+      <div className="mb-2.5 flex flex-wrap gap-2">
+        {RANGES.map((option) => (
+          <button
+            key={option.key}
+            type="button"
+            onClick={() => setRange(option.key)}
+            aria-pressed={range === option.key}
+            className={cn(
+              "press rounded-full border px-4 py-2 text-[13px] font-bold whitespace-nowrap",
+              range === option.key
+                ? "border-foreground bg-foreground text-white"
+                : "border-line bg-surface text-muted-foreground hover:bg-surface-2",
+            )}
+          >
+            {option.label}
+            <span className="mono ml-1.5 opacity-70">{rangeCounts[option.key]}</span>
+          </button>
+        ))}
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -151,12 +208,23 @@ export function AdminLeads({ leads, capped }: Props) {
         <div className="rounded-[14px] border border-line bg-surface px-5 py-[52px] text-center shadow-card">
           <Users size={40} weight="duotone" className="mx-auto text-subtle" />
           <p className="mt-3 text-[15.5px] font-extrabold">
-            {filter === "all" ? "No leads yet today" : "Nothing in this view"}
+            {filter !== "all"
+              ? "Nothing in this view"
+              : range === "all"
+                ? "No leads yet"
+                : `No leads in ${RANGE_LABEL[range]}`}
           </p>
+          {/*
+           * An empty Today with leads behind it is the exact thing that read as
+           * lost data before these pills existed, so say where they are rather
+           * than leaving an empty table to be interpreted.
+           */}
           <p className="mt-1 text-[13.5px] text-muted-foreground">
-            {filter === "all"
-              ? "Leads appear here as soon as reps start scanning."
-              : "Try another filter."}
+            {filter !== "all"
+              ? "Try another filter."
+              : leads.length > 0
+                ? `${leads.length} older ${leads.length === 1 ? "lead is" : "leads are"} here — try 7 days or All.`
+                : "Leads appear here as soon as reps start scanning."}
           </p>
         </div>
       ) : (

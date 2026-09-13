@@ -4,8 +4,8 @@ import { AdminLeads } from "@/components/admin-leads";
 import { PageHeader } from "@/components/page-header";
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
-import { listTodaysLeadsFromAtlas } from "@/lib/mongo";
-import { listTodaysEventLeads, type EventLeadsResult } from "@/lib/salesforce/lead";
+import { listRecentLeadsFromAtlas } from "@/lib/mongo";
+import { listRecentEventLeads, type EventLeadsResult } from "@/lib/salesforce/lead";
 
 /** Read live on every visit; never cached. */
 export const dynamic = "force-dynamic";
@@ -25,11 +25,11 @@ export default async function AdminPage() {
 
   const result: EventLeadsResult = env.MONGODB_URI
     ? await listFromAtlas()
-    : await listTodaysEventLeads();
+    : await listRecentEventLeads();
 
   return (
     <>
-      <PageHeader title="Admin" subtitle={`Every lead captured today, live from ${source}.`} />
+      <PageHeader title="Admin" subtitle={`Every lead the team has captured, live from ${source}.`} />
 
       {result.ok ? (
         <AdminLeads leads={result.leads} capped={result.capped} />
@@ -37,7 +37,7 @@ export default async function AdminPage() {
         <div className="rounded-[14px] border border-bad/20 bg-bad-soft p-5">
           <p className="flex items-center gap-2 text-[15px] font-extrabold text-bad">
             <WarningCircle size={18} weight="bold" />
-            Today&apos;s leads could not be read
+            Leads could not be read
           </p>
           <p className="mt-1.5 text-[13.5px] text-bad/90">
             Reps can keep scanning — leads queue on their phones and sync once this is fixed.
@@ -51,8 +51,8 @@ export default async function AdminPage() {
 
 async function listFromAtlas(): Promise<EventLeadsResult> {
   try {
-    const leads = await listTodaysLeadsFromAtlas();
-    return { ok: true, leads, capped: leads.length >= 200 };
+    const leads = await listRecentLeadsFromAtlas();
+    return { ok: true, leads, capped: leads.length >= 500 };
   } catch (error) {
     return { ok: false, error: (error as Error).message.slice(0, 500) };
   }
