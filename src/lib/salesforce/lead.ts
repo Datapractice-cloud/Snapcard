@@ -197,16 +197,20 @@ export type EventLeadsResult =
   | { ok: false; error: string };
 
 /** The admin table shows the most recent this many. */
-const ADMIN_LIMIT = 200;
+const ADMIN_LIMIT = 500;
 
 /*
- * Today's event leads. Constant query, no interpolation.
+ * Recent event leads. Constant query, no interpolation.
  *
  * Filtered on LeadSource rather than a custom event field: the app no longer
- * writes one (see the Salesforce contract in CLAUDE.md). CreatedDate = TODAY is
- * evaluated in the org's timezone, which is the one the admin is thinking in.
+ * writes one (see the Salesforce contract in CLAUDE.md).
+ *
+ * LAST_N_DAYS:30 rather than TODAY, because the admin table now filters by date
+ * in the browser and needs something older than today to filter. TODAY here was
+ * also evaluated in the *org's* timezone while the Atlas path used the server's,
+ * so the two sources disagreed about which day it was.
  */
-const TODAYS_LEADS_SOQL = `SELECT Id, Name, Company, Email, Phone, Title, CreatedDate FROM Lead WHERE LeadSource = 'Event' AND CreatedDate = TODAY ORDER BY CreatedDate DESC LIMIT ${ADMIN_LIMIT}`;
+const RECENT_LEADS_SOQL = `SELECT Id, Name, Company, Email, Phone, Title, CreatedDate FROM Lead WHERE LeadSource = 'Event' AND CreatedDate = LAST_N_DAYS:30 ORDER BY CreatedDate DESC LIMIT ${ADMIN_LIMIT}`;
 
 type LeadRecord = {
   Id: string;
@@ -222,9 +226,9 @@ type LeadRecord = {
  * Returns a result rather than throwing: a Salesforce outage should give the
  * admin a page explaining that, not a 500.
  */
-export async function listTodaysEventLeads(): Promise<EventLeadsResult> {
+export async function listRecentEventLeads(): Promise<EventLeadsResult> {
   try {
-    const { records } = await soql<LeadRecord>(TODAYS_LEADS_SOQL);
+    const { records } = await soql<LeadRecord>(RECENT_LEADS_SOQL);
 
     return {
       ok: true,

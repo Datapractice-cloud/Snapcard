@@ -4,6 +4,14 @@
 
 ## Now
 
+### Security — do these first
+
+- [ ] **Make the GitHub repo private.** `project-brain/` is committed to a public repo and
+      states that Atlas accepts `0.0.0.0/0` and that its password may be compromised. No
+      credentials are exposed, but it is a map.
+- [ ] Merge the `admin-date-range` branch via a PR into `main` (CI runs on PRs; merging
+      deploys)
+
 ### Salesforce — the active thread
 
 - [ ] **User:** delete the test Lead `00QQy00000nmzY2MAI` ("SnapCard Proof 15:20") from
@@ -88,6 +96,9 @@ Gated on the org getting `SnapCard_Client_Id__c` and the FLS grants, then
 
 <!-- - [x] YYYY-MM-DD — task -->
 
+- [x] 2026-09-13 — **Admin can see past today** — shared `lead-range.ts` gives `/admin`
+      and `/leads` the same Today / 7 days / All pills, filtered in the browser so the
+      day boundary is the viewer's rather than Hostinger's UTC (`1e4979d`)
 - [x] 2026-09-12 — Corrected the deploy topology in `README.md` and `SETUP.md`
       (Hostinger deploys `main`), fixed the `snapcard1` database name and dropped the
       stale consent line

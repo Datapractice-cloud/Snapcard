@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { StatusChip } from "@/components/lead-status";
 import { LeadDetailSheet, type LocalLead } from "@/components/lead-detail-sheet";
 import { outboxDb, processOutbox } from "@/lib/client/outbox";
+import { RANGES, startOf, type RangeKey } from "@/lib/lead-range";
 import { initialsFor } from "@/lib/initials";
 import { cn } from "@/lib/utils";
 import type { HistoryItem } from "@/lib/client/outbox";
@@ -23,35 +24,6 @@ const AVATAR_TONES = [
   "bg-[#fdf2f8] text-[#be185d]",
   "bg-[#f5f3ff] text-[#6d28d9]",
 ];
-
-/**
- * How far back the list reaches.
- *
- * "All" is first and is the default on purpose: this screen exists because
- * leads appeared to have gone missing, and a filter that quietly hid anything
- * older than a week would look like exactly that bug.
- */
-const RANGES = [
-  { key: "all", label: "All" },
-  { key: "today", label: "Today" },
-  { key: "7", label: "7 days" },
-  { key: "30", label: "30 days" },
-] as const;
-
-type RangeKey = (typeof RANGES)[number]["key"];
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** The epoch millisecond a range begins at, or null for everything. */
-function startOf(range: RangeKey): number | null {
-  if (range === "all") return null;
-  if (range === "today") {
-    const midnight = new Date();
-    midnight.setHours(0, 0, 0, 0);
-    return midnight.getTime();
-  }
-  return Date.now() - Number(range) * DAY_MS;
-}
 
 export function LeadsList() {
   const [query, setQuery] = useState("");
