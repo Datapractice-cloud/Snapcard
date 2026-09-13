@@ -173,17 +173,21 @@ export async function leadImagesCollection() {
 }
 
 /** One row of the admin table, read from Atlas rather than Salesforce. */
-export async function listTodaysLeadsFromAtlas(limit = 200) {
-  const since = new Date();
-  since.setHours(0, 0, 0, 0);
-
+/**
+ * The most recent leads, newest first, for the admin table.
+ *
+ * Deliberately not filtered by date. It used to cut at the server's midnight,
+ * which meant "today" was Hostinger's day rather than the admin's — leads
+ * captured before 05:30 IST fell off a day early — and it left yesterday's
+ * leads unreachable entirely. The range pills do that filtering in the browser
+ * instead, where the day boundary is the viewer's own (see `lead-range.ts`).
+ *
+ * Newest-first means a day's leads stay complete unless that one day exceeds
+ * the limit; only the "All" view can truncate, and `capped` reports it.
+ */
+export async function listRecentLeadsFromAtlas(limit = 500) {
   const docs = await withMongo((db) =>
-    db
-      .collection<LeadDoc>("leads")
-      .find({ createdAt: { $gte: since } })
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .toArray(),
+    db.collection<LeadDoc>("leads").find({}).sort({ createdAt: -1 }).limit(limit).toArray(),
   );
 
   return docs.map((doc) => ({
