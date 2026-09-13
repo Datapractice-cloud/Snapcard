@@ -1,7 +1,7 @@
 ---
 project: snapcard
 status: active
-last_log: 2026-09-12
+last_log: 2026-09-13
 ---
 
 # 03 — Progress
@@ -41,9 +41,13 @@ in the repo; `02-decisions.md` records exactly where they are now wrong.
 
 ## Start here next time
 
-**Deploy, carefully.** Hostinger deploys **`main`**, and the app is in use — so pushing
-to `main` is a release. `main` is at `d0cacc8`, which still has the manual-entry bug
-reps are hitting today. In order:
+**Merge `admin-date-range`, then finish the deploy checks.** The 13 earlier commits are
+already merged and live (`fd1ea49`). Branch `admin-date-range` is pushed but not merged.
+Hostinger deploys **`main`**, so merging is releasing. In order:
+
+0. **Make the repo private** and rotate the Atlas password — `project-brain/` is public
+   and says in plain English that Atlas is open to `0.0.0.0/0` with a possibly
+   compromised password.
 
 1. **Confirm `MONGODB_URI` in hPanel.** If unset while Salesforce is off, the live app
    stores leads nowhere and they pile up in reps' outboxes.
