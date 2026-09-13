@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
-import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { X } from "@phosphor-icons/react/dist/csr/X";
 import { stepIndex } from "@/lib/lightbox-nav";
 import { cn } from "@/lib/utils";
@@ -158,6 +156,15 @@ export function ImageLightbox({ images, startIndex, alt, onClose }: Props) {
       onClick={onClose}
       className={cn(
         "fixed inset-0 z-[60] flex flex-col bg-[var(--scrim)]/92 backdrop-blur-sm",
+        /*
+         * Not decoration. This renders outside <SheetContent>, and a modal Radix
+         * sheet has react-remove-scroll put `pointer-events: none` on <body>,
+         * handing it back only inside the sheet's own content. Without this the
+         * whole lightbox is inert: no close, no backdrop tap, no zoom — only
+         * Escape, which is a window listener. An inherited value loses to one
+         * declared on the element, so this is enough.
+         */
+        "pointer-events-auto",
         "pt-[calc(12px+env(safe-area-inset-top))] pb-[calc(12px+env(safe-area-inset-bottom))]",
         "pl-[calc(16px+env(safe-area-inset-left))] pr-[calc(16px+env(safe-area-inset-right))]",
         "animate-in fade-in-0 duration-150 motion-reduce:animate-none",
@@ -165,10 +172,7 @@ export function ImageLightbox({ images, startIndex, alt, onClose }: Props) {
     >
       {/* Chrome sits outside the picture, so nothing is ever laid over the card. */}
       <div className="flex shrink-0 items-center justify-between gap-3">
-        <p className="text-[13px] font-extrabold text-white/80 capitalize">
-          {current.label}
-          {total > 1 && <span className="mono ml-2 text-white/45">{index + 1}/{total}</span>}
-        </p>
+        <p className="text-[13px] font-extrabold text-white/80 capitalize">{current.label}</p>
         <button
           ref={closeRef}
           type="button"
@@ -215,37 +219,38 @@ export function ImageLightbox({ images, startIndex, alt, onClose }: Props) {
         />
       </div>
 
-      <div className="flex shrink-0 items-center justify-between gap-3">
-        <button
-          type="button"
-          aria-label="Previous side"
-          onClick={(event) => {
-            event.stopPropagation();
-            go(-1);
-          }}
-          disabled={index === 0}
-          className="press grid size-11 place-items-center rounded-full bg-white/10 text-white disabled:opacity-0 hover:bg-white/20"
-        >
-          <CaretLeft size={18} weight="bold" />
-        </button>
+      {/*
+       * Dots only, and only when there is a second side to reach. The carets
+       * that used to live here were `disabled:opacity-0` — invisible controls
+       * still taking up space — and the hint beside them restated a convention
+       * every phone already teaches.
+       */}
+      {total > 1 && (
+        <div className="flex shrink-0 items-center justify-center gap-1">
+          {images.map((image, dot) => (
+            <button
+              key={image.label}
+              type="button"
+              aria-label={`Show the ${image.label}`}
+              aria-current={dot === index}
+              onClick={(event) => {
+                event.stopPropagation();
+                go(dot - index);
+              }}
+              // Padding makes the target thumb-sized while the dot stays small.
+              className="press grid size-9 place-items-center"
+            >
+              <span
+                className={cn(
+                  "size-1.5 rounded-full transition-colors",
+                  dot === index ? "bg-white" : "bg-white/35",
+                )}
+              />
+            </button>
+          ))}
+        </div>
+      )}
 
-        <p className="pointer-events-none text-center text-xs font-bold text-white/60">
-          {zoom ? "Tap the card to zoom out" : "Tap the card to zoom · tap outside to close"}
-        </p>
-
-        <button
-          type="button"
-          aria-label="Next side"
-          onClick={(event) => {
-            event.stopPropagation();
-            go(1);
-          }}
-          disabled={index >= total - 1}
-          className="press grid size-11 place-items-center rounded-full bg-white/10 text-white disabled:opacity-0 hover:bg-white/20"
-        >
-          <CaretRight size={18} weight="bold" />
-        </button>
-      </div>
     </div>
   );
 }
